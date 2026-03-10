@@ -1,0 +1,15 @@
+<div class="terminal-panel p-5 h-full relative" hx-get="/dashboard/api/system-health/" hx-trigger="every 60s, load"
+    hx-swap="innerHTML">
+
+    <!-- Initialization Skeleton -->
+    <div
+        class="text-[10px] font-mono text-[#64748b] tracking-widest uppercase mb-4 border-b border-[#1A1F28] pb-2 flex justify-between">
+        <span>// SYSTEM_PULSE</span>
+        <span class="text-[#00e5ff] animate-pulse">INIT...</span>
+    </div>
+    <div class="animate-pulse space-y-3">
+        <div class="h-8 bg-[#1A1F28]/40 w-full"></div>
+        <div class="h-8 bg-[#1A1F28]/40 w-full"></div>
+        <div class="h-8 bg-[#1A1F28]/40 w-full"></div>
+    </div>
+</div>

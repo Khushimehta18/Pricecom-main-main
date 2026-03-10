@@ -1,0 +1,94 @@
+<div class="w-full bg-[#080B0F] border-b border-[#1A1F28] py-2 overflow-hidden relative">
+    <!-- Gradient Overlays for smooth fade effect at edges -->
+    <div class="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#080B0F] to-transparent z-10"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#080B0F] to-transparent z-10"></div>
+
+    <!-- Alpine x-data for continuous ticker animation -->
+    <div x-data="{
+        offset: 0,
+        animate() {
+            setInterval(() => {
+                this.offset -= 1;
+                if (this.offset < -2000) this.offset = 0; // Reset length (approximate)
+            }, 50);
+        }
+    }" x-init="animate()" class="flex whitespace-nowrap will-change-transform"
+        :style="'transform: translateX(' + offset + 'px)'">
+
+        <!-- Ticker Items (Duplicate for seamless loop) -->
+        <template x-for="i in 3">
+            <div class="flex items-center">
+
+                <!-- Item: iPhone 14 -->
+                <div class="flex items-center space-x-3 px-6 border-r border-[#1A1F28]">
+                    <div
+                        class="h-6 w-6 bg-[#0a0d14] border border-[#1A1F28] flex items-center justify-center text-[#ff3366]">
+                        <i class="fas fa-mobile-screen text-[10px]"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-[#e2e8f0] font-mono">IPHONE-14-128</span>
+                            <span
+                                class="text-[9px] text-[#ff3366] bg-[#ff3366]/10 px-1 font-mono border border-[#ff3366]/20">-5.4%</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-[10px] font-mono mt-0.5">
+                            <span class="text-[#64748b] line-through tabular-nums">₹61,499</span>
+                            <span class="text-[#00ff9d] font-bold tabular-nums">₹58,000</span>
+                            <span class="text-[#1A1F28]">|</span>
+                            <span class="text-[#ffb000]">AMZN</span>
+                            <span class="text-[#1A1F28]">|</span>
+                            <span class="text-[#64748b]">T-4m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item: Samsung S23 -->
+                <div class="flex items-center space-x-3 px-6 border-r border-[#1A1F28]">
+                    <div
+                        class="h-6 w-6 bg-[#0a0d14] border border-[#1A1F28] flex items-center justify-center text-[#00e5ff]">
+                        <i class="fas fa-mobile text-[10px]"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-[#e2e8f0] font-mono">SAMSUNG-S23-256</span>
+                            <span
+                                class="text-[9px] text-[#00e5ff] bg-[#00e5ff]/10 px-1 font-mono border border-[#00e5ff]/20">RESTOCK</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-[10px] font-mono mt-0.5">
+                            <span class="text-[#64748b]">QTY: 14</span>
+                            <span class="text-[#1A1F28]">|</span>
+                            <span class="text-[#ffb000]">FLKP</span>
+                            <span class="text-[#1A1F28]">|</span>
+                            <span class="text-[#64748b]">T-12m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item: Sony WH-1000XM5 -->
+                <div class="flex items-center space-x-3 px-6 border-r border-[#1A1F28]">
+                    <div
+                        class="h-6 w-6 bg-[#0a0d14] border border-[#1A1F28] flex items-center justify-center text-[#ffb000]">
+                        <i class="fas fa-headphones text-[10px]"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-[#e2e8f0] font-mono">SONY-WH-1000XM5</span>
+                            <span
+                                class="text-[9px] text-[#ffb000] bg-[#ffb000]/10 px-1 font-mono border border-[#ffb000]/20">+14%_SPIKE</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-[10px] font-mono mt-0.5">
+                            <span class="text-[#64748b]">₹22,990</span>
+                            <span class="text-[#ff3366] font-bold tabular-nums">₹26,499</span>
+                            <span class="text-[#1A1F28]">|</span>
+                            <span class="text-[#ffb000]">CROM</span>
+                            <span class="text-[#1A1F28]">|</span>
+                            <span class="text-[#64748b]">T-2s</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+
+    </div>
+</div>

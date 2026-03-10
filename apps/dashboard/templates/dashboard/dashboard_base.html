@@ -1,0 +1,400 @@
+{% load static %}
+{% load cotton %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PRICECOM TERMINAL{% endblock %}</title>
+
+    <!-- Fonts: Geometric Sans + Monospaced -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Core Stack -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            base: '#080B0F',
+                            panel: 'transparent',
+                            border: '#1A1F28',
+                            accent: '#00e5ff', /* neon cyan */
+                            amber: '#ffb000',  /* amber */
+                            success: '#00ff9d',
+                            danger: '#ff3366',
+                            textHighlight: '#e2e8f0',
+                            textMuted: '#64748b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Space Grotesk"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    fontSize: {
+                        'xxs': '0.65rem',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        body {
+            background-color: #080B0F;
+            color: #94a3b8;
+            overflow-x: hidden;
+            font-family: '"Space Grotesk"', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        /* Number typography enforcement */
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Scanline Overlay */
+        .scanline {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+        }
+
+        /* Terminal Panel Standard */
+        .terminal-panel {
+            background: #080B0F;
+            border: 1px solid #1A1F28;
+            border-radius: 0;
+            /* NO rounded corners */
+            box-shadow: none;
+            /* NO drop shadows */
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #080B0F;
+            border-left: 1px solid #1A1F28;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1A1F28;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00e5ff;
+        }
+
+        .blinking-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: #00e5ff;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                fill-opacity: 1;
+                opacity: 1;
+            }
+
+            50% {
+                fill-opacity: 0;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body x-data="pricecomStore" class="antialiased h-screen overflow-hidden flex bg-brand-base text-sm">
+
+    <form style="display:none">{% csrf_token %}</form>
+
+    <!-- HTMX Global Error Banner -->
+    <div id="global-error"
+        class="fixed top-0 inset-x-0 bg-[#ff3366] text-[#080B0F] font-mono text-center py-2 text-xs font-bold tracking-widest z-[9999]"
+        x-data="{ show: false }" x-show="show" x-transition.opacity
+        @htmx:response-error.window="show = true; setTimeout(() => show = false, 5000)" style="display: none;">
+        <i class="fas fa-exclamation-triangle mr-2"></i> CRITICAL_ERROR: BACKEND_CONNECTION_FAILED
+    </div>
+
+    <div class="scanline"></div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="isSidebarOpen" x-transition.opacity class="fixed inset-0 bg-black/80 z-40 lg:hidden"
+        @click="isSidebarOpen = false" x-cloak></div>
+
+    <!-- Sidebar -->
+    <aside :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+        class="w-56 fixed inset-y-0 left-0 z-50 transform transition-transform duration-0 lg:relative lg:translate-x-0 flex flex-col h-full bg-brand-base border-r border-brand-border">
+        <!-- Logo Area -->
+        <div class="h-12 flex items-center justify-between px-4 border-b border-brand-border">
+            <span class="text-lg font-bold tracking-widest text-brand-textHighlight uppercase">PRICE<span
+                    class="text-brand-accent">COM</span></span>
+            <button @click="isSidebarOpen = false" class="lg:hidden text-brand-textMuted hover:text-brand-accent">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-4 flex flex-col font-mono text-xs uppercase tracking-wider">
+            <a href="#"
+                class="flex items-center space-x-3 px-4 py-2 text-brand-accent bg-[#0a1922] border-l-2 border-brand-accent">
+                <span class="w-4 text-center">]</span>
+                <span class="font-bold">Dashboard</span>
+            </a>
+            <a href="#"
+                class="flex items-center space-x-3 px-4 py-2 text-brand-textMuted hover:text-brand-textHighlight hover:bg-[#0a111a] border-l-2 border-transparent transition-none">
+                <span class="w-4 text-center">></span>
+                <span>Matrix</span>
+            </a>
+            <a href="#"
+                class="flex items-center space-x-3 px-4 py-2 text-brand-textMuted hover:text-brand-textHighlight hover:bg-[#0a111a] border-l-2 border-transparent transition-none">
+                <span class="w-4 text-center">></span>
+                <span>Watchlist <span x-show="$store.pricecomStore.watchlistCount > 0"
+                        x-text="'(' + $store.pricecomStore.watchlistCount + ')'"
+                        class="text-[#00e5ff] text-[10px] ml-1"></span></span>
+            </a>
+            <a href="#"
+                class="flex items-center space-x-3 px-4 py-2 text-brand-textMuted hover:text-brand-textHighlight hover:bg-[#0a111a] border-l-2 border-transparent transition-none">
+                <span class="w-4 text-center">></span>
+                <span>Alerts</span>
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer / System Status -->
+        <div class="p-4 border-t border-brand-border">
+            <div class="flex items-center space-x-2 text-[10px] text-brand-textMuted font-mono">
+                <div class="h-1.5 w-1.5 bg-brand-success rounded-none animate-pulse"
+                    :class="{'bg-[#ff3366]': $store.pricecomStore.systemError }"></div>
+                <span class="tracking-widest uppercase"
+                    x-text="$store.pricecomStore.systemError ? 'SYSTEM_FAULT' : 'CORE SYSTEM ONLINE'"></span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative z-10">
+
+        <!-- Navbar -->
+        <header
+            class="h-12 bg-brand-base border-b border-brand-border sticky top-0 z-30 px-4 lg:px-6 flex items-center justify-between">
+            <!-- Mobile Menu Button & Search -->
+            <div class="flex items-center flex-1">
+                <button @click="isSidebarOpen = true"
+                    class="lg:hidden text-brand-textMuted hover:text-brand-accent mr-4">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <div class="w-full max-w-lg relative hidden sm:flex items-center">
+                    <span class="text-brand-accent font-mono mr-2">></span>
+                    <input type="text" placeholder="Search SKU, brand, or product URL… [⌘K]"
+                        class="w-full bg-transparent border-none text-xs text-brand-textHighlight font-mono placeholder-brand-textMuted focus:outline-none focus:ring-0">
+                </div>
+            </div>
+
+            <!-- User Controls -->
+            <div class="flex items-center space-x-6 font-mono text-xs">
+                <div class="flex items-center space-x-2 text-brand-amber">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>ALERTS: <span x-text="$store.pricecomStore.activeAlerts"></span></span>
+                </div>
+
+                <div class="h-4 w-px bg-brand-border hidden sm:block"></div>
+
+                <div
+                    class="flex items-center space-x-2 cursor-pointer uppercase tracking-wider text-brand-textMuted hover:text-brand-accent">
+                    <span>OP: ADMIN</span>
+                    <div class="h-1.5 w-1.5 bg-brand-accent"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Canvas -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-brand-base p-4 lg:p-6 pb-20 scroll-smooth">
+            <div class="max-w-[1600px] mx-auto">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Alpine Global Store Initialization -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('pricecomStore', {
+                isSidebarOpen: false,
+                activeAlerts: {{ active_alerts|default:"0" }},
+            selectedProductId: null,
+            predictionSignal: '{{ prediction.signal|default:""|escapejs }}',
+            systemError: false,
+            watchlistCount: 0,
+            imageSearchState: {
+                taskId: null,
+                status: null,
+                results: null,
+                ocrText: null,
+                error: null
+            }
+            });
+
+        Alpine.data('pricecomStore', () => ({
+            isSidebarOpen: false,
+            init() {
+                // Sync local state to store to let sidebar handle it if needed
+                this.$watch('$store.pricecomStore.isSidebarOpen', val => this.isSidebarOpen = val);
+                this.$watch('isSidebarOpen', val => this.$store.pricecomStore.isSidebarOpen = val);
+
+                window.addEventListener('htmx:responseError', () => {
+                    this.$store.pricecomStore.systemError = true;
+                });
+            }
+        }));
+
+        // Watchlist update listener
+        window.addEventListener('update-watchlist-count', (e) => {
+            Alpine.store('pricecomStore').watchlistCount = e.detail;
+        });
+        });
+
+        // Custom HTMX configurations: attach Django CSRF token to non-GET requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.body.addEventListener('htmx:configRequest', function (evt) {
+            // Prefer explicit csrf token field if present (forms), otherwise fall back to cookie
+            var csrfInput = document.querySelector('input[name=csrfmiddlewaretoken]');
+            var token = csrfInput ? csrfInput.value : getCookie('csrftoken');
+            if (token && evt.detail.verb.toLowerCase() !== 'get') {
+                evt.detail.headers['X-CSRFToken'] = token;
+            }
+        });
+
+        // Image search polling: polls /dashboard/api/result/<task_id>/ until SUCCESS/FAILURE
+        window.startImagePoll = function(taskId){
+            try{
+                const store = Alpine.store('pricecomStore');
+                store.imageSearchState = { taskId: taskId, status: 'PENDING', results: null, ocrText: store.imageSearchState.ocrText || null, error: null };
+                let attempts = 0;
+                const start = Date.now();
+                const maxTime = 120000; // 2 minutes
+
+                async function poll(){
+                    try{
+                        const resp = await fetch(`/dashboard/api/result/${taskId}/`, { method: 'GET', headers: { 'HX-Request': 'true' } });
+                        if(!resp.ok){ throw new Error('Network error'); }
+                        const data = await resp.json();
+                        store.imageSearchState.status = data.status || store.imageSearchState.status;
+
+                        if(data.status === 'SUCCESS'){
+                            store.imageSearchState.results = data.results || [];
+                            // update product table rows
+                            const tbody = document.getElementById('products-tbody');
+                            if(tbody){
+                                tbody.innerHTML = '';
+                                (data.results || []).forEach(function(item){
+                                    const tr = document.createElement('tr');
+                                    tr.className = 'hover:bg-[#0a111a] transition-none group cursor-pointer';
+                                    const name = (item.name || item.store || 'Result');
+                                    const price = item.price ? ('₹' + Number(item.price).toLocaleString('en-IN')) : 'N/A';
+                                    const alt = item.alt_price ? ('₹' + Number(item.alt_price).toLocaleString('en-IN')) : 'N/A';
+                                    const minv = item.min_price ? ('₹' + Number(item.min_price).toLocaleString('en-IN')) : price;
+                                    const delta = item.delta || '';
+                                    const url = item.url || '#';
+                                    tr.innerHTML = `
+                                        <td class="px-4 py-3">
+                                            <div class="flex items-center space-x-3">
+                                                <div>
+                                                    <p class="text-brand-textHighlight group-hover:text-brand-accent">${name}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 tabular-nums text-brand-textMuted">${price}</td>
+                                        <td class="px-4 py-3 tabular-nums text-brand-textMuted">${alt}</td>
+                                        <td class="px-4 py-3 tabular-nums"><span class="font-bold text-brand-success">${minv}</span></td>
+                                        <td class="px-4 py-3"><span class="text-[10px] text-brand-textMuted bg-[#0D1117] px-1 border border-brand-border">${delta}</span></td>
+                                        <td class="px-4 py-3 text-right"><a href="${url}" target="_blank" class="bg-transparent text-brand-accent border border-brand-accent px-3 py-1 text-[10px] uppercase tracking-widest hover:bg-brand-accent hover:text-[#080B0F] transition-none">VISIT</a></td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                });
+                            }
+
+                            // update chart if provided
+                            if(window.ApexCharts && data.chart){
+                                if(data.chart.series){ ApexCharts.exec('priceHistoryChart', 'updateSeries', data.chart.series); }
+                                if(data.chart.categories){ ApexCharts.exec('priceHistoryChart', 'updateOptions', { xaxis: { categories: data.chart.categories } }); }
+                            }
+
+                            store.imageSearchState.status = 'SUCCESS';
+                            return;
+                        }
+
+                        if(data.status === 'FAILURE'){
+                            store.imageSearchState.error = data.error || 'Processing failed';
+                            store.imageSearchState.status = 'FAILURE';
+                            return;
+                        }
+
+                    }catch(err){
+                        console.error('image poll error', err);
+                    }
+
+                    attempts++;
+                    if(Date.now() - start > maxTime){
+                        store.imageSearchState.error = 'Timed out waiting for results';
+                        store.imageSearchState.status = 'TIMEOUT';
+                        return;
+                    }
+                    const delay = attempts > 15 ? 5000 : 2000;
+                    setTimeout(poll, delay);
+                }
+
+                poll();
+            }catch(e){ console.error('startImagePoll error', e); }
+        }
+    </script>
+</body>
+
+</html>

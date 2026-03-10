@@ -1,0 +1,68 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block title %}TERMINAL | PRICECOM{% endblock %}
+
+{% block content %}
+<div class="flex flex-col space-y-0 border border-brand-border bg-brand-border gap-[1px]">
+
+    <!-- Top Summary Cards row -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-[1px]">
+        {% for card in stat_cards %}
+            <c-stat_card
+                title="{{ card.title }}"
+                value="{{ card.value }}"
+                sublabel="{{ card.sublabel }}"
+                {% if card.type %}type="{{ card.type }}"{% endif %}
+            />
+        {% empty %}
+            <c-stat_card title="Products Tracked" value="8,421" sublabel="sync pending" />
+        {% endfor %}
+    </div>
+
+    <!-- Main Workspace Split -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-[1px]">
+
+        <!-- Left Analysis Area -->
+        <div class="lg:col-span-9 flex flex-col gap-[1px]">
+            <!-- Image Upload Card (new) -->
+            <div class="w-full mb-3">
+                    {% include 'dashboard/partials/image_upload_card.html' %}
+            </div>
+
+            <!-- Chart Panel -->
+            <div class="w-full">
+                <c-price_chart />
+            </div>
+
+            <!-- Product Detail Panel (populated via HTMX when a row is clicked) -->
+            <div id="product-detail-panel" class="w-full border-t border-brand-border bg-[#05070c]">
+                <!-- Initially empty; filled by /dashboard/api/products/<id>/history/?view=panel -->
+            </div>
+
+            <!-- Price Table -->
+            <div class="w-full">
+                {% include 'dashboard/partials/price_table.html' %}
+            </div>
+        </div>
+
+        <!-- Right Intelligence & Action Area -->
+        <!-- Glowing vertical divider effect handled by the grid gap bg-brand-border but we could explicitly style border -->
+        <div class="lg:col-span-3 flex flex-col gap-[1px] relative">
+            <div
+                class="absolute -left-[1px] top-0 bottom-0 w-[1px] bg-brand-accent/20 shadow-[0_0_10px_#00e5ff] z-10 pointer-events-none hidden lg:block">
+            </div>
+
+            <c-prediction_panel />
+            <c-watchlist_panel />
+
+            <c-system_health />
+            <c-ocr_panel />
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% if chart_seed %}
+    {{ chart_seed|json_script:"chart-seed-data" }}
+{% endif %}

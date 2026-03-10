@@ -1,0 +1,51 @@
+<div class="terminal-panel p-5 mt-4 min-h-[300px] flex flex-col">
+    <div
+        class="text-[10px] font-mono text-[#64748b] tracking-widest uppercase mb-4 border-b border-[#1A1F28] pb-2 flex justify-between">
+        <span>// PURCHASE_ALLOCATION</span>
+        <span class="text-[#00ff9d]">LIVE_SYNC</span>
+    </div>
+
+    <div
+        class="flex-1 w-full bg-[#080B0F] border border-[#1A1F28] relative overflow-hidden flex items-center justify-center p-4">
+        <!-- We use standard div for apexcharts to bind to -->
+        <div id="purchase-allocation-chart" class="w-full h-full min-h-[220px]"></div>
+
+        <!-- Grid overlay to simulate terminal -->
+        <div class="absolute inset-0 pointer-events-none"
+            style="background-image: linear-gradient(#1A1F28 1px, transparent 1px), linear-gradient(90deg, #1A1F28 1px, transparent 1px); background-size: 20px 20px; opacity: 0.2;">
+        </div>
+    </div>
+</div>
+
+<script>
+        document.addEventListener('DOMContentLoaded', () = > {
+            if(typeof ApexCharts !== 'undefined') {
+                    Ap exCharts(document.queryS            "#purchase-alloca                , {
+                              4, 55, 4                        chart: {
+                    t                                                         
+                                           arent',
+                    fontFamily: '"JetBrains                                            anima                        lse }
+                                                s:                 s', 'Appare                    ],
+                                0e5ff', '#00ff9d', '#ff3366'],
+                stroke: { show: true, c                    '], width: 2 },
+                               els:        na    bled,
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '75%',
+                            background: 'transparent',
+                            labels: { show: false }
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: { colors: '#64748b' },
+                    fontSize: '10px',
+                    markers: { radius: 0 }
+                },
+                tooltip: { theme: 'dark' }
+            }).render();
+        }
+    });
+</script>

@@ -1,0 +1,21 @@
+<div id="image-upload-panel" class="terminal-panel p-5 bg-[#0a111a] border border-brand-border space-y-3">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-xs uppercase text-brand-textMuted tracking-widest">AI Shopper</p>
+            <h3 class="text-brand-textHighlight font-semibold">Processing image…</h3>
+        </div>
+        <div class="text-[10px] text-brand-textMuted">OCR + scrape running</div>
+    </div>
+
+    <div class="flex items-center space-x-3 text-brand-textMuted text-sm">
+        <span class="h-4 w-4 border-2 border-brand-accent border-t-transparent animate-spin inline-block"></span>
+        <span>We will update the price table and chart automatically.</span>
+    </div>
+
+    <div hx-get="/dashboard/api/result/{{ task_id }}/"
+         hx-trigger="load, every 2s"
+         hx-target="#products-tbody"
+         hx-swap="innerHTML">
+        <div class="text-[10px] text-brand-textMuted">Polling for results…</div>
+    </div>
+</div>

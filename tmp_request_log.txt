@@ -1,0 +1,9 @@
+2026-03-01T05:57:42.770376Z [REQ] GET /dashboard/api/system-health/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36
+2026-03-01T05:58:43.734292Z [REQ] GET /dashboard/api/watchlist/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36
+2026-03-01T05:58:43.750093Z [REQ] GET /dashboard/api/system-health/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36
+2026-03-01T05:59:44.744276Z [REQ] GET /dashboard/api/system-health/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36
+2026-03-01T06:00:03.180756Z [REQ] GET /dashboard/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=python-requests/2.32.5
+2026-03-01T06:00:03.348914Z [REQ] POST /dashboard/api/image-search/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=python-requests/2.32.5
+2026-03-01T06:00:45.745099Z [REQ] GET /dashboard/api/watchlist/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36
+2026-03-01T06:00:45.746096Z [REQ] GET /dashboard/api/system-health/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36
+2026-03-01T06:01:46.771497Z [REQ] GET /dashboard/api/system-health/ HOST=127.0.0.1:8000 HOST_HDR=127.0.0.1:8000 UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36

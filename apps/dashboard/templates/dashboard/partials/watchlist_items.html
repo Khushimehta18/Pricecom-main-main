@@ -1,0 +1,38 @@
+{% for item in items %}
+<div class="group cursor-pointer">
+    <div class="flex justify-between font-mono text-xs text-[#64748b] mb-1">
+        <span class="text-[#e2e8f0]">{{ item.name }}</span>
+        <span>TGT: {{ item.target }}</span>
+    </div>
+    <div class="flex justify-between items-end font-mono">
+        <span class="text-lg font-bold text-white tabular-nums">{{ item.current }}</span>
+        <span class="text-[10px] text-[#ff3366] bg-[#ff3366]/10 px-1">{{ item.delta }}</span>
+    </div>
+    <div class="mt-2 w-full bg-[#0a0d14] border border-[#1A1F28] h-1.5 flex">
+        <div class="bg-[#00e5ff] h-full" style="width: {{ item.pct }}%;"></div>
+    </div>
+</div>
+
+{% if not forloop.last %}
+<div class="h-[1px] bg-[#1A1F28] w-full my-4"></div>
+{% endif %}
+{% endfor %}
+
+{% if items|length == 0 %}
+<p class="text-center text-[#64748b] text-xs font-mono">NO WATCHLIST SIGNALS AVAILABLE</p>
+{% endif %}
+
+<!-- Reward -->
+<div
+    class="bg-[#0a0d14] p-3 text-[#ffb000] font-mono text-[10px] uppercase border border-[#ffb000]/30 mt-6 relative overflow-hidden">
+    <div
+        class="absolute right-0 top-0 bottom-0 w-8 bg-[#ffb000]/10 border-l border-[#ffb000]/30 flex items-center justify-center">
+        <i class="fas fa-database text-[#ffb000]"></i>
+    </div>
+    <p class="tracking-widest opacity-80 mb-1">PROJ_YIELD_CALC</p>
+    <h4 class="text-xl font-bold text-[#ffb000] tabular-nums">₹1,240</h4>
+</div>
+<script>
+    // Alpine variable update via script tag injection trick
+    window.dispatchEvent(new CustomEvent('update-watchlist-count', { detail: {{ items|length }} }));
+</script>

@@ -1,0 +1,17 @@
+<div class="terminal-panel p-5 mt-4 min-h-[250px] relative">
+    <div
+        class="text-[10px] font-mono text-[#64748b] tracking-widest uppercase mb-4 border-b border-[#1A1F28] pb-2 flex justify-between">
+        <span>// WATCHLIST</span>
+        <span class="text-[#00e5ff]"><span x-text="watchlistCount || '--'"></span>_TRACKING</span>
+    </div>
+
+    <div class="space-y-4" hx-get="/dashboard/api/watchlist/" hx-trigger="load" hx-swap="innerHTML">
+
+        <!-- Skeleton Loader -->
+        <div class="animate-pulse space-y-4 py-4">
+            <div class="h-10 bg-[#1A1F28]/50 w-full mb-4"></div>
+            <div class="h-10 bg-[#1A1F28]/50 w-full mb-4"></div>
+            <div class="h-10 bg-[#1A1F28]/50 w-full"></div>
+        </div>
+    </div>
+</div>

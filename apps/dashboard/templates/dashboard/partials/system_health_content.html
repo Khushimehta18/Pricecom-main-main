@@ -1,0 +1,32 @@
+<div
+    class="text-[10px] font-mono text-[#64748b] tracking-widest uppercase mb-4 border-b border-[#1A1F28] pb-2 flex justify-between">
+    <span>// SYSTEM_PULSE</span>
+    <span class="text-[#00ff9d] animate-pulse">OPTIMAL</span>
+</div>
+
+<div class="space-y-3 font-mono text-xs">
+    <div class="flex justify-between items-center p-2 bg-[#0a0d14] border border-[#1A1F28]">
+        <span class="text-[#64748b]">NODE_CLUSTER</span>
+        <div class="flex items-center space-x-2">
+            <span class="text-[#e2e8f0]">{{ nodes }}</span>
+            <span class="h-1.5 w-1.5 bg-[#00ff9d]"></span>
+        </div>
+    </div>
+    <div class="flex justify-between p-2 bg-[#0a0d14] border border-[#1A1F28]">
+        <span class="text-[#64748b]">QUEUE_THROUGHPUT</span>
+        <span class="text-[#00e5ff] tabular-nums">{{ queue }}</span>
+    </div>
+    <div class="flex justify-between p-2 bg-[#0a0d14] border border-[#1A1F28]">
+        <span class="text-[#64748b]">REDIS_LATENCY</span>
+        <span class="text-[#e2e8f0] tabular-nums">{{ latency }}</span>
+    </div>
+    <div class="pt-4 border-t border-[#1A1F28] mt-4">
+        <div class="flex justify-between mb-2">
+            <span class="text-[10px] text-[#64748b] tracking-widest">CPU_UTILIZATION</span>
+            <span class="text-[10px] text-[#ffb000]">{{ cpu }}%</span>
+        </div>
+        <div class="w-full bg-[#0a0d14] h-2 border border-[#1A1F28] flex">
+            <div class="bg-[#ffb000] h-full" style="width: {{ cpu }}%;"></div>
+        </div>
+    </div>
+</div>

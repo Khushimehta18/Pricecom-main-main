@@ -1,0 +1,77 @@
+<div class="w-full max-w-4xl mx-auto flex flex-col items-center justify-center py-20" x-data="{ ocrResult: null }">
+
+    <!-- Title / Branding -->
+    <div class="mb-12 text-center">
+        <h1 class="text-4xl md:text-6xl font-black text-[#e2e8f0] tracking-tighter uppercase mb-4"
+            style="font-family: 'Space Grotesk', sans-serif;">
+            PRICE<span class="text-[#00e5ff] drop-shadow-[0_0_15px_rgba(0,229,255,0.5)]">COM</span>_NEXUS
+        </h1>
+        <p class="text-[#64748b] font-mono tracking-widest uppercase text-sm">
+            [ <span class="text-[#00ff9d] animate-pulse">●</span> INTELLIGENCE_ROUTING_ACTIVE ]
+        </p>
+    </div>
+
+    <!-- Search Bar Form with HTMX via POST -->
+    <form hx-post="/dashboard/api/search/" hx-target="#search-results" hx-swap="innerHTML"
+        hx-indicator="#search-spinner"
+        class="w-full relative flex items-center bg-[#080B0F] border border-[#1A1F28] shadow-[0_0_30px_rgba(0,229,255,0.05)] transition-all hover:border-[#00e5ff]/50 px-2 py-2">
+
+        {% csrf_token %}
+
+        <!-- Input -->
+        <div class="flex-1 flex items-center pl-4">
+            <span class="text-[#00e5ff] font-mono mr-4 animate-pulse">></span>
+            <input type="text" name="q" placeholder="QUERY SKU, BRAND, OR URL_LINK..."
+                class="w-full bg-transparent border-none text-lg md:text-xl text-[#e2e8f0] font-mono placeholder-[#1A1F28] focus:outline-none focus:ring-0">
+        </div>
+
+        <!-- OCR Upload Button -->
+        <button type="button"
+            class="flex items-center justify-center h-12 w-12 border border-[#1A1F28] text-[#64748b] hover:text-[#00e5ff] hover:border-[#00e5ff] transition-none mx-2 group"
+            @click="$refs.ocrInput.click()">
+            <i class="fas fa-camera group-hover:drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]"></i>
+        </button>
+        <input type="file" x-ref="ocrInput" class="hidden"
+            @change="(e) => { const f = e.target.files && e.target.files[0]; if (!f) return; const fd = new FormData(); fd.append('image', f); const csrftoken = document.querySelector('input[name=csrfmiddlewaretoken]')?.value; fetch('/dashboard/api/image-search/', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrftoken } }).then(r => r.json()).then(data => { if (data.ocr_text) { document.querySelector('input[name=q]').value = data.ocr_text; } else if (data.task_id) { /* preserve behavior: allow backend to continue workflow */ } setTimeout(() => $el.closest('form').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })), 300); }).catch(err => { console.error('OCR upload failed', err); }); }">
+
+        <!-- Submit Button -->
+        <button type="submit"
+            class="bg-[#00e5ff]/10 border border-[#00e5ff] text-[#00e5ff] font-mono font-bold tracking-widest px-8 hover:bg-[#00e5ff] hover:text-[#080B0F] transition-none h-12 shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+            <span class="indicator-label">[ EXECUTE ]</span>
+            <span class="indicator-progress hidden whitespace-nowrap"><i class="fas fa-spinner fa-spin mr-2"></i></span>
+        </button>
+    </form>
+
+    <!-- Error/Loading indicators and dynamic container -->
+    <div id="search-spinner" class="htmx-indicator mt-8 text-[#00e5ff] font-mono text-sm uppercase tracking-widest">
+        <i class="fas fa-globe-americas fa-spin mr-2"></i> CONNECTING_TO_KNOWLEDGE_BASE...
+    </div>
+
+    <!-- Container for HTMX search results -->
+    <div id="search-results" class="w-full mt-8"></div>
+
+    <!-- Quick Filters -->
+    <div
+        class="mt-12 flex flex-wrap justify-center gap-4 font-mono text-[10px] uppercase tracking-widest text-[#64748b]">
+        <span class="hover:text-[#e2e8f0] cursor-pointer"
+            @click="document.querySelector('input[name=q]').value = 'ELECTRONICS'; $el.closest('div').previousElementSibling.previousElementSibling.previousElementSibling.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}))">/ELECTRONICS</span>
+        <span class="text-[#1A1F28]">//</span>
+        <span class="hover:text-[#e2e8f0] cursor-pointer"
+            @click="document.querySelector('input[name=q]').value = 'APPAREL'; $el.closest('div').previousElementSibling.previousElementSibling.previousElementSibling.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}))">/APPAREL</span>
+        <span class="text-[#1A1F28]">//</span>
+        <span class="hover:text-[#e2e8f0] cursor-pointer">/HOME_GOODS</span>
+        <span class="text-[#1A1F28]">//</span>
+        <span class="text-[#ffb000] hover:text-[#ffb000] cursor-pointer">/FLASH_SALES</span>
+    </div>
+</div>
+
+<style>
+    /* Spinner handling classes */
+    form.htmx-request .indicator-label {
+        display: none;
+    }
+
+    form.htmx-request .indicator-progress {
+        display: inline-block !important;
+    }
+</style>

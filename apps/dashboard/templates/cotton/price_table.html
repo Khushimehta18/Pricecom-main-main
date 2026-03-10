@@ -1,0 +1,38 @@
+<div class="terminal-panel flex flex-col h-full bg-[#05080c]">
+    <div class="p-3 border-b border-brand-border flex items-center justify-between bg-[#0a0d14]">
+        <h2 class="text-sm font-bold text-brand-textHighlight flex items-center font-mono uppercase tracking-widest">
+            <span class="text-brand-accent mr-2">::</span> MARKET_COMPARISON_MATRIX
+        </h2>
+        <div class="font-mono text-[10px] text-brand-textMuted flex items-center" id="sync-status">
+            <span class="h-1.5 w-1.5 bg-brand-success mr-2 animate-pulse"></span>
+            SYNC_ACTIVE
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[800px] font-mono whitespace-nowrap">
+            <thead>
+                <tr
+                    class="bg-[#080B0F] text-[10px] text-brand-textMuted uppercase tracking-wider border-b border-brand-border">
+                    <th class="px-4 py-2 font-normal">ASSET_ID</th>
+                    <th class="px-4 py-2 font-normal">NODE_AMZ</th>
+                    <th class="px-4 py-2 font-normal">NODE_FLIP</th>
+                    <th class="px-4 py-2 font-normal">MIN_VAL</th>
+                    <th class="px-4 py-2 font-normal">DELTA</th>
+                    <th class="px-4 py-2 text-right font-normal">EXEC</th>
+                </tr>
+            </thead>
+            <!-- HTMX GET Request - tbody has id for external injection -->
+            <tbody id="products-tbody" class="divide-y divide-brand-border text-xs" hx-get="/dashboard/api/products/" hx-trigger="load"
+                hx-swap="innerHTML">
+                <!-- Skeleton Loader -->
+                <tr>
+                    <td colspan="6" class="px-4 py-12 text-center text-brand-textMuted">
+                        <i class="fas fa-circle-notch fa-spin text-brand-accent mr-2 text-xl"></i>
+                        <span class="animate-pulse tracking-widest uppercase text-xs">FETCHING_ASSET_DATA...</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

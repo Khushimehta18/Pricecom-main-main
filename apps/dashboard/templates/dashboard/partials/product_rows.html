@@ -1,0 +1,40 @@
+{% for p in products %}
+<tr
+    class="hover:bg-[#0a111a] transition-none group cursor-pointer"
+    hx-get="/dashboard/api/products/{{ p.id }}/history/?view=panel"
+    hx-target="#product-detail-panel"
+    hx-swap="innerHTML"
+    hx-trigger="click"
+    @click="$store.pricecomStore.selectedProductId = {{ p.id }}; htmx.ajax('GET', '/dashboard/api/products/{{ p.id }}/history/', {swap: 'none', handler: function(elt, info){ 
+        var data = JSON.parse(info.xhr.response); 
+        ApexCharts.exec('priceHistoryChart', 'updateSeries', data.series);
+        if (data.categories) {
+            ApexCharts.exec('priceHistoryChart', 'updateOptions', { xaxis: { categories: data.categories }});
+        }
+    }})">
+    <td class="px-4 py-3">
+        <div class="flex items-center space-x-3">
+            <div>
+                <p class="text-brand-textHighlight group-hover:text-brand-accent">{{ p.name }}</p>
+                <p class="text-[9px] text-brand-textMuted mt-0.5"><span class="text-brand-success">{{ p.status }}</span>
+                    // 12ms</p>
+            </div>
+        </div>
+    </td>
+    <td class="px-4 py-3 tabular-nums text-brand-textMuted">{{ p.amz }}</td>
+    <td class="px-4 py-3 tabular-nums text-brand-textMuted">{{ p.flip }}</td>
+    <td class="px-4 py-3 tabular-nums"><span class="font-bold text-brand-success">{{ p.min }}</span></td>
+    <td class="px-4 py-3">
+        <span class="text-[10px] text-brand-textMuted bg-[#0D1117] px-1 border border-brand-border">{{ p.delta }}</span>
+    </td>
+    <td class="px-4 py-3 text-right space-x-2">
+        <button
+            class="bg-transparent text-brand-accent border border-brand-accent px-3 py-1 text-[10px] uppercase tracking-widest hover:bg-brand-accent hover:text-[#080B0F] transition-none">
+            Watchlist
+        </button>
+        <a href="#"
+           onclick="event.preventDefault(); event.stopPropagation(); htmx.ajax('GET', '/dashboard/api/products/{{ p.id }}/history/?view=panel', { target: '#product-detail-panel', swap: 'innerHTML', headers: { 'HX-Request': 'true' } }); return false;"
+           class="text-brand-textMuted text-[10px] uppercase tracking-widest hover:text-brand-accent cursor-pointer">Details</a>
+    </td>
+</tr>
+{% endfor %}

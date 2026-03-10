@@ -1,0 +1,10 @@
+<!-- Image Modal intentionally left minimal, OCR functionality implemented via file picker directly in search_panel.html -->
+<div x-data="{ open: false }" @open-modal.window="open = true" x-show="open" x-cloak
+    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80">
+    <div class="terminal-panel p-6 max-w-lg w-full" @click.away="open = false">
+        <h3 class="text-[#00e5ff] font-mono font-bold mb-4">OCR_UPLINK</h3>
+        <p class="text-[#64748b] font-mono text-xs mb-6">Awaiting image sequence...</p>
+        <button @click="open = false"
+            class="border border-[#ff3366] text-[#ff3366] px-4 py-1 text-xs font-mono">CLOSE_CONNECTION</button>
+    </div>
+</div>

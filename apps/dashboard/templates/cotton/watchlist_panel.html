@@ -1,0 +1,18 @@
+<div class="terminal-panel p-5 h-full"
+    hx-get="/dashboard/api/watchlist/"
+    hx-trigger="load, every 120s"
+    hx-target="this"
+    hx-swap="innerHTML">
+    <div
+        class="text-[10px] font-mono text-brand-textMuted tracking-widest uppercase mb-4 border-b border-brand-border pb-2 flex justify-between">
+        <span>// WATCHLIST</span>
+        <span class="text-brand-accent">SYNCING...</span>
+    </div>
+
+    <div class="space-y-4 animate-pulse">
+        <div class="h-16 bg-[#0f131c] border border-brand-border"></div>
+        <div class="h-16 bg-[#0f131c] border border-brand-border"></div>
+        <div class="h-[1px] bg-brand-border w-full my-4"></div>
+        <div class="h-20 bg-[#0f131c] border border-brand-border"></div>
+    </div>
+</div>

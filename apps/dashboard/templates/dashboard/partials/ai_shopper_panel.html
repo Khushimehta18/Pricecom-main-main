@@ -1,0 +1,14 @@
+<div class="card ai-shopper">
+  <h3>AI Shopper</h3>
+  <form id="ai-search-form" hx-post="/dashboard/api/search/" hx-target="#ai-search-results" hx-swap="innerHTML">
+    <input type="text" name="q" placeholder="Search or paste OCR text" />
+    <button type="submit">Search</button>
+  </form>
+  <div id="ai-upload">
+    <form id="ai-upload-form" enctype="multipart/form-data">
+      <input type="file" name="image" accept="image/*" />
+      <button type="button" id="ai-upload-btn">Upload</button>
+    </form>
+  </div>
+  <div id="ai-search-results"></div>
+</div>

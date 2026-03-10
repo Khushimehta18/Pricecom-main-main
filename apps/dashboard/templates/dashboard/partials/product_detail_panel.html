@@ -1,0 +1,350 @@
+<div class="w-full border border-brand-border bg-[#05070c] px-5 py-4 space-y-6">
+    <!-- Product Header Section -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex items-start gap-4">
+            <!-- Placeholder image block (extend later when image URLs are available) -->
+            <div class="h-20 w-20 rounded-lg bg-[#0b0f18] border border-brand-border flex items-center justify-center text-xs uppercase tracking-wide text-brand-textMuted">
+                {{ product.brand_name|default:"PRC" }}
+            </div>
+            <div class="space-y-1">
+                <h2 class="text-sm md:text-base font-semibold text-brand-textHighlight">
+                    {{ product.name }}
+                </h2>
+                <p class="text-[11px] text-brand-textMuted">
+                    <span class="uppercase tracking-widest text-brand-accent/80">{{ product.brand_name|default:"GENERIC" }}</span>
+                    {% if product.category %}
+                        <span class="mx-1 text-brand-textMuted/40">•</span>
+                        <span class="text-brand-textMuted/80">{{ product.category.name }}</span>
+                    {% endif %}
+                </p>
+                <p class="text-[11px] text-brand-textMuted/70">
+                    Tracking across
+                    <span class="text-brand-textHighlight font-medium">{{ num_stores|default:"0" }}</span>
+                    stores · Trend:
+                    <span class="font-semibold {% if trend_label == 'UP' %}text-red-400{% elif trend_label == 'DOWN' %}text-emerald-400{% else %}text-brand-textMuted{% endif %}">
+                        {% if trend_label == 'UP' %}Up{% elif trend_label == 'DOWN' %}Down{% else %}Stable{% endif %}
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="flex flex-wrap gap-2 justify-start lg:justify-end">
+            <!-- Watchlist toggle -->
+            <div id="watchlist-toggle-{{ product.id }}">
+                {% if is_watchlisted %}
+                    <button
+                        class="magnetic-btn rounded-xl bg-gray-800/50 border border-electricCyan text-electricCyan px-4 py-2 text-[11px] font-bold tracking-widest shadow-[0_0_15px_rgba(0,243,255,0.4)]"
+                        hx-post="/scraper/watchlist/toggle/"
+                        hx-vals='{"product_id": "{{ product.id }}"}'
+                        hx-swap="outerHTML">
+                        <i class="fas fa-heart mr-2 animate-pulse"></i> WATCHING
+                    </button>
+                {% else %}
+                    <button
+                        class="magnetic-btn rounded-xl bg-gray-800/50 border border-gray-700 text-gray-300 px-4 py-2 text-[11px] font-bold tracking-widest hover:bg-neonPurple hover:border-neonPurple hover:text-white transition-all duration-300"
+                        hx-post="/scraper/watchlist/toggle/"
+                        hx-vals='{"product_id": "{{ product.id }}"}'
+                        hx-swap="outerHTML">
+                        <i class="far fa-heart mr-2"></i> WATCH
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- Set Price Alert (stub button using PriceAlert model context) -->
+            <button
+                type="button"
+                class="rounded-xl border border-brand-border/70 bg-[#0b0f18] px-4 py-2 text-[11px] font-semibold tracking-widest text-brand-textMuted hover:border-brand-accent hover:text-brand-accent transition-none"
+                data-product-id="{{ product.id }}"
+                data-product-name="{{ product.name }}">
+                Set Price Alert
+            </button>
+
+            <!-- View Product (default to cheapest store) -->
+            {% with cheapest=stores|first %}
+                {% if cheapest and cheapest.product_url %}
+                    <a
+                        href="{{ cheapest.product_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center rounded-xl bg-brand-accent text-[#05070c] px-4 py-2 text-[11px] font-semibold tracking-widest hover:bg-brand-accent/90 transition-none">
+                        View Product
+                    </a>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <!-- Metrics strip -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px]">
+        <div class="px-3 py-2 rounded-lg bg-[#080e17] border border-brand-border/70">
+            <p class="text-brand-textMuted/70">Current Lowest</p>
+            <p class="mt-1 text-sm font-semibold text-brand-textHighlight">
+                {{ current_lowest_price_display }}
+            </p>
+        </div>
+        <div class="px-3 py-2 rounded-lg bg-[#080e17] border border-brand-border/70">
+            <p class="text-brand-textMuted/70">Lowest Recorded</p>
+            <p class="mt-1 text-sm font-semibold text-emerald-400">
+                {{ insights.lowest_price_display }}
+            </p>
+        </div>
+        <div class="px-3 py-2 rounded-lg bg-[#080e17] border border-brand-border/70">
+            <p class="text-brand-textMuted/70">Average Price</p>
+            <p class="mt-1 text-sm font-semibold text-brand-textHighlight">
+                {{ insights.avg_price_display }}
+            </p>
+        </div>
+        <div class="px-3 py-2 rounded-lg bg-[#080e17] border border-brand-border/70">
+            <p class="text-brand-textMuted/70">Price Change</p>
+            <p class="mt-1 text-sm font-semibold {% if insights.trend_label == 'UP' %}text-red-400{% elif insights.trend_label == 'DOWN' %}text-emerald-400{% else %}text-brand-textHighlight{% endif %}">
+                {{ insights.change_pct_display }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Main body: Price Comparison + Chart + Insights -->
+    <div class="grid grid-cols-1 xl:grid-cols-5 gap-5">
+        <!-- Price Comparison Table -->
+        <div class="xl:col-span-3 space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-[12px] font-semibold uppercase tracking-[0.2em] text-brand-textMuted">
+                    Price Comparison
+                </h3>
+            </div>
+            <div class="overflow-x-auto rounded-lg border border-brand-border/70 bg-[#05070c]">
+                <table class="min-w-full divide-y divide-brand-border/60 text-[11px]">
+                    <thead class="bg-[#05070c] text-brand-textMuted/80">
+                        <tr>
+                            <th class="px-3 py-2 text-left font-normal">Store</th>
+                            <th class="px-3 py-2 text-right font-normal">Current Price</th>
+                            <th class="px-3 py-2 text-center font-normal">Availability</th>
+                            <th class="px-3 py-2 text-center font-normal">Last Updated</th>
+                            <th class="px-3 py-2 text-right font-normal">Link</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-brand-border/60">
+                        {% for store in stores %}
+                            <tr class="hover:bg-[#070c14]">
+                                <td class="px-3 py-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="h-6 w-6 rounded-full bg-[#0b0f18] border border-brand-border/80 flex items-center justify-center text-[9px] uppercase text-brand-textMuted">
+                                            {{ store.name|slice:":2" }}
+                                        </div>
+                                        <span class="text-brand-textHighlight text-[11px]">{{ store.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-2 text-right text-[11px]">
+                                    {% if forloop.first %}
+                                        <span class="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/40 px-2 py-0.5 text-emerald-300 font-semibold">
+                                            {{ store.price_display }}
+                                            <span class="ml-1 text-[9px] uppercase tracking-wide">Best</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="text-brand-textMuted">{{ store.price_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-3 py-2 text-center">
+                                    {% if store.available %}
+                                        <span class="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-300 px-2 py-0.5 text-[10px]">
+                                            In Stock
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center rounded-full bg-red-500/10 text-red-300 px-2 py-0.5 text-[10px]">
+                                            Out of Stock
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-3 py-2 text-center text-[10px] text-brand-textMuted/80">
+                                    {% if store.last_updated %}
+                                        {{ store.last_updated|date:"d M, H:i" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="px-3 py-2 text-right">
+                                    {% if store.product_url %}
+                                        <a
+                                            href="{{ store.product_url }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="inline-flex items-center rounded-full border border-brand-border/80 px-3 py-1 text-[10px] uppercase tracking-widest text-brand-textMuted hover:border-brand-accent hover:text-brand-accent transition-none">
+                                            View
+                                        </a>
+                                    {% else %}
+                                        <span class="text-[10px] text-brand-textMuted/50">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="px-3 py-4 text-center text-[11px] text-brand-textMuted">
+                                    No store prices available yet for this product.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Chart + Insights -->
+        <div class="xl:col-span-2 space-y-4">
+            <!-- Price Trend Chart -->
+            <div class="rounded-lg border border-brand-border/70 bg-[#05070c] p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-[12px] font-semibold uppercase tracking-[0.2em] text-brand-textMuted">
+                        Price Trend Over Time
+                    </h3>
+                </div>
+                <div class="h-48">
+                    <canvas id="product-price-chart-{{ product.id }}"></canvas>
+                </div>
+            </div>
+
+            <!-- Insights Panel -->
+            <div class="rounded-lg border border-brand-border/70 bg-[#05070c] p-3 space-y-2 text-[11px]">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-textMuted">
+                        Insights
+                    </h3>
+                    <span class="text-[10px] text-brand-textMuted/70">
+                        Alerts active: {{ insights.active_alerts_count }}
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <p class="text-brand-textMuted/70">Lowest Ever</p>
+                        <p class="mt-1 text-sm font-semibold text-emerald-400">
+                            {{ insights.lowest_price_display }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-brand-textMuted/70">Highest</p>
+                        <p class="mt-1 text-sm font-semibold text-red-400">
+                            {{ insights.highest_price_display }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-brand-textMuted/70">Average</p>
+                        <p class="mt-1 text-sm font-semibold text-brand-textHighlight">
+                            {{ insights.avg_price_display }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-brand-textMuted/70">Trend</p>
+                        <p class="mt-1 text-sm font-semibold {% if insights.trend_label == 'UP' %}text-red-400{% elif insights.trend_label == 'DOWN' %}text-emerald-400{% else %}text-brand-textHighlight{% endif %}">
+                            {{ insights.change_pct_display }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inline script to bootstrap Chart.js using existing history payload -->
+    <script>
+        (function() {
+            const payload = {{ chart_json|safe }};
+            const canvasId = "product-price-chart-{{ product.id }}";
+
+            function ensureChartJs(cb) {
+                if (window.Chart) {
+                    cb();
+                    return;
+                }
+                const existing = document.querySelector('script[data-pricecom-chartjs]');
+                if (existing) {
+                    existing.addEventListener('load', cb);
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = "https://cdn.jsdelivr.net/npm/chart.js";
+                s.async = true;
+                s.dataset.pricecomChartjs = "1";
+                s.onload = cb;
+                document.head.appendChild(s);
+            }
+
+            ensureChartJs(function() {
+                const ctx = document.getElementById(canvasId);
+                if (!ctx || !payload || !payload.series) {
+                    return;
+                }
+
+                const datasets = (payload.series || []).map(function(s, idx) {
+                    const baseColor = ['#22c55e', '#3b82f6', '#eab308', '#f97316'][idx % 4];
+                    return {
+                        label: s.name,
+                        data: s.data,
+                        borderColor: baseColor,
+                        backgroundColor: baseColor + '33',
+                        tension: 0.25,
+                        pointRadius: 0,
+                        borderWidth: 1.5,
+                    };
+                });
+
+                const data = {
+                    labels: payload.categories || [],
+                    datasets: datasets,
+                };
+
+                const options = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#7d8590',
+                                maxRotation: 0,
+                                autoSkip: true,
+                            },
+                            grid: {
+                                color: '#111827',
+                            },
+                        },
+                        y: {
+                            ticks: {
+                                color: '#7d8590',
+                                callback: function(value) {
+                                    return '₹' + value;
+                                },
+                            },
+                            grid: {
+                                color: '#111827',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#9ca3af',
+                                font: { size: 10 },
+                            },
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const price = context.parsed.y;
+                                    return context.dataset.label + ': ₹' + price;
+                                },
+                            },
+                        },
+                    },
+                };
+
+                // Destroy existing chart instance if we re-render for a different product
+                if (ctx._pricecomChart) {
+                    ctx._pricecomChart.destroy();
+                }
+                ctx._pricecomChart = new Chart(ctx, {
+                    type: 'line',
+                    data: data,
+                    options: options,
+                });
+            });
+        })();
+    </script>
+</div>
+

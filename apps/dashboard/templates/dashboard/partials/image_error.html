@@ -1,0 +1,12 @@
+<div id="image-upload-panel" class="card bg-[#190c14] border border-[#ff3366] px-4 py-4 space-y-3">
+  <div class="flex items-center justify-between">
+    <div>
+      <p class="text-xs uppercase text-[#ff99b5] tracking-widest">AI Shopper</p>
+      <h3 class="text-[#ffccd9] font-semibold">Upload failed</h3>
+    </div>
+  </div>
+
+  <p class="text-sm text-[#ff99b5]">{{ error|default:'Unable to process image' }}</p>
+
+  <button class="bg-[#ff3366] text-[#080B0F] px-3 py-2 text-xs uppercase tracking-widest" onclick="location.reload()">Retry</button>
+</div>

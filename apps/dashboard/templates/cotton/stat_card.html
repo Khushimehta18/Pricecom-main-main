@@ -1,0 +1,21 @@
+<c-vars title="Metric" value="0" sublabel="detail" type="default" />
+
+<div class="terminal-panel p-3 flex flex-col justify-between py-4 relative group">
+    <!-- Blinking live indicator for freshness -->
+    {% if type == 'freshness' %}
+    <div class="absolute top-3 right-3 h-1.5 w-1.5 bg-brand-success shadow-[0_0_5px_#00ff9d] animate-pulse"></div>
+    {% endif %}
+
+    <div class="text-[10px] font-mono uppercase tracking-widest text-brand-textMuted mb-2">
+        [{{ title }}]
+    </div>
+
+    <div class="font-mono text-2xl font-bold tabular-nums text-brand-textHighlight mt-1 flex items-center">
+        {{ value }}
+        {% if type == 'freshness' %}<span class="blinking-cursor"></span>{% endif %}
+    </div>
+
+    <div class="text-[10px] font-mono text-brand-textMuted mt-3 flex items-center">
+        <span class="text-brand-accent mr-1">></span> {{ sublabel }}
+    </div>
+</div>

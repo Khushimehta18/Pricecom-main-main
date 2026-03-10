@@ -1,0 +1,29 @@
+<div id="image-upload-panel" class="terminal-panel p-5">
+    <div class="text-[10px] font-mono text-brand-textMuted tracking-widest uppercase mb-4 border-b border-brand-border pb-2 flex justify-between">
+        <span>// IMAGE_SEARCH</span>
+        <span class="text-brand-accent">OCR + SCRAPE</span>
+    </div>
+
+    <form id="image-upload-form"
+          class="flex flex-col space-y-3"
+          hx-post="/dashboard/api/image-search/"
+          hx-encoding="multipart/form-data"
+          hx-target="#image-upload-panel"
+          hx-swap="outerHTML">
+        <div class="border border-brand-border bg-[#0a0d14] p-4">
+            <label for="imgfile" class="block text-[10px] text-brand-textMuted mb-2">Drag & drop an image or click to choose</label>
+            <div class="w-full h-40 flex items-center justify-center bg-[#05080c] border border-[#111319] cursor-pointer">
+                <input id="imgfile" type="file" name="image" accept="image/*" required class="hidden">
+                <label for="imgfile" class="text-brand-textMuted text-sm">Drop image here or <span class="text-brand-accent underline">browse</span></label>
+            </div>
+            <p class="text-[10px] text-brand-textMuted mt-2">Accepted: JPG, PNG, WEBP — Max 5MB</p>
+        </div>
+
+        <button type="submit"
+                class="px-4 py-2 bg-brand-accent text-[#080B0F] font-bold uppercase text-[10px] tracking-widest">
+            Upload & Analyze
+        </button>
+
+        <p class="text-[11px] text-brand-textMuted">We run OCR → fuzzy match → scrape → update the table and chart automatically.</p>
+    </form>
+</div>

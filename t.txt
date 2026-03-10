@@ -1,0 +1,31 @@
+to gen django secret key
+inside venv: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+
+---------------------------------
+
+create a database in mysql:
+CREATE DATABASE pricecom
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+---------------------------------
+
+create a user:
+CREATE USER 'pricecom_user'@'localhost'
+IDENTIFIED BY 'StrongPassword123!';
+
+GRANT ALL PRIVILEGES 
+ON pricecom.* 
+TO 'pricecom_user'@'localhost';
+
+FLUSH PRIVILEGES;
+
+---------------------------------
+celery -A config worker --loglevel=info --concurrency=4
+install redis if not already done, then run celery with: 
+then python manage.py runserver 
+
+---------------------------------
+
+create serpapi api key
+

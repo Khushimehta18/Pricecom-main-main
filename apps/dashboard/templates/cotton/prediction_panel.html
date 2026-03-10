@@ -1,0 +1,53 @@
+<div
+    class="terminal-panel p-5 flex flex-col relative border-l-2 border-l-brand-danger shadow-[-2px_0_10px_rgba(255,51,102,0.2)]">
+    <div
+        class="text-[10px] font-mono text-brand-textMuted tracking-widest uppercase mb-4 border-b border-brand-border pb-2">
+        // AI_PREDICTION_ENGINE
+    </div>
+
+    <div class="flex items-end justify-between mb-4">
+        <div>
+            <div class="text-3xl font-bold font-mono text-brand-danger tracking-tighter tabular-nums leading-none">
+                {{ prediction.signal|default:"WAIT 3 DAYS" }}
+            </div>
+            <div class="text-xs font-mono text-brand-amber mt-2 uppercase tracking-wide">
+                [ {{ prediction.confidence|default:72 }}% CONFIDENCE_LVL ]
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 border border-brand-border bg-[#0a0d14] p-3 text-[10px] font-mono">
+        <div class="text-brand-textHighlight mb-2 uppercase border-b border-brand-border pb-1">Signals_Detected:</div>
+        <ul class="space-y-2 text-brand-textMuted">
+            {% with signal_list=prediction.signals %}
+                {% if signal_list %}
+                    {% for sig in signal_list %}
+                    <li class="flex items-start">
+                        <span class="text-brand-accent mr-2">></span> {{ sig }}
+                    </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="flex items-start">
+                        <span class="text-brand-accent mr-2">></span> Awaiting intelligence feed
+                    </li>
+                {% endif %}
+            {% endwith %}
+        </ul>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 mt-4 font-mono text-[10px] uppercase tracking-widest">
+        <div class="border border-brand-border p-3 text-brand-textMuted">
+            <div class="text-brand-textHighlight text-xl tabular-nums">{{ prediction.drop_probability|default:68 }}%</div>
+            <p class="mt-1 text-[9px]">DROP_PROB</p>
+        </div>
+        <div class="border border-brand-border p-3 text-brand-textMuted">
+            <div class="text-brand-textHighlight text-xl tabular-nums">{{ prediction.smart_index|default:72 }}</div>
+            <p class="mt-1 text-[9px]">SMART_BUY_INDEX</p>
+        </div>
+    </div>
+
+    <button
+        class="w-full mt-6 py-2 border border-brand-danger bg-brand-danger/10 text-brand-danger font-mono text-xs uppercase tracking-widest hover:bg-brand-danger hover:text-white transition-none">
+        ACTIVATE_DIP_ALERT
+    </button>
+</div>

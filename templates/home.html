@@ -1,0 +1,53 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block title %}NEXUS | PRICECOM{% endblock %}
+
+{% block content %}
+<div class="flex flex-col border border-[#1A1F28] bg-[#1A1F28] gap-[1px]">
+
+    <!-- 1️⃣ TOP: MOVING PRODUCT ALERTS -->
+    <div class="w-full bg-[#080B0F]">
+        <c-alert_ticker />
+    </div>
+
+    <!-- 2️⃣ CENTER: SEARCH PANEL -->
+    <div class="w-full bg-[#080B0F]">
+        <c-search_panel />
+    </div>
+
+    <!-- BOTTOM SPLIT Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-[1px] w-full">
+
+        <!-- 3️⃣ BOTTOM LEFT: ANALYTICS PANELS -->
+        <div class="lg:col-span-8 flex flex-col gap-[1px] bg-[#1A1F28]">
+            <div class="bg-[#080B0F] p-4 h-full flex flex-col gap-4 relative">
+                <!-- Inner Layout Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Left: Predictor + Watchlist -->
+                    <div class="flex flex-col gap-4">
+                        <c-ai_predictor />
+                        <c-watchlist />
+                    </div>
+
+                    <!-- Right: Purchase Chart -->
+                    <div class="h-full">
+                        <c-purchase_chart />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4️⃣ BOTTOM RIGHT: DEAL OPPORTUNITIES -->
+        <div class="lg:col-span-4 bg-[#080B0F] relative">
+            <!-- Glowing vertical divider -->
+            <div
+                class="absolute -left-[1px] top-0 bottom-0 w-[1px] bg-[#00e5ff]/20 shadow-[0_0_10px_#00e5ff] z-10 pointer-events-none hidden lg:block">
+            </div>
+
+            <c-opportunity_feed />
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

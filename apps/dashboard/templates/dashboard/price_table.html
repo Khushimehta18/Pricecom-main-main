@@ -1,0 +1,8 @@
+<table class="price-table">
+  <thead>
+    <tr><th>Product</th><th>Amazon</th><th>Flipkart</th><th>Min</th><th></th></tr>
+  </thead>
+  <tbody id="products-tbody" hx-get="/dashboard/api/products/" hx-trigger="load" hx-swap="innerHTML">
+    <!-- rows injected by HTMX -->
+  </tbody>
+</table>
