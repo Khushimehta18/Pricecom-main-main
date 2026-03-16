@@ -1,6 +1,8 @@
+import logging
+from typing import Dict
+
 from django.utils import timezone
 from .watchlist_storage import storage
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +28,27 @@ class WatchlistService:
             'lowest_price_seen': float(data['current_price']), # will be merged by storage if exists
             'last_checked': timezone.now().isoformat(),
         }
-        
-        success = storage.add_product(user_id, product_data)
+
+        metadata: Dict = {}
+        alert_price = data.get('alert_price')
+        if alert_price not in (None, ''):
+            try:
+                metadata['alert_price'] = float(alert_price)
+                metadata['last_alerted_price'] = None
+            except (TypeError, ValueError):
+                return {
+                    "success": False,
+                    "error": "alert_price must be a valid number",
+                }
+
+        if metadata.get('alert_price') is not None:
+            metadata['notify_email'] = bool(data.get('notify_email', False))
+            metadata['alert_enabled'] = True
+
+        success = storage.add_product(user_id, product_data, metadata if metadata else None)
         if success:
+            if metadata:
+                product_data.update(metadata)
             return {"success": True, "product": product_data}
         return {"success": False, "error": "Storage error"}
 

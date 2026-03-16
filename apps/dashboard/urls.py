@@ -10,6 +10,7 @@ urlpatterns = [
     path('watchlist/remove/<uuid:uuid>/', views.watchlist_remove, name='watchlist_remove'),
     path('watchlist/update-target/<uuid:uuid>/', views.watchlist_update_target, name='watchlist_update_target'),
     path('alerts/', views.dashboard_alerts, name='alerts'),
+    path('alerts/set/', views.set_price_alert_from_product, name='set_price_alert_from_product'),
     path('api/products/', views.api_products, name='api_products'),
     path('api/products/<int:uuid>/history/', views.api_product_history, name='api_product_history'),
     path('api/watchlist/', views.api_watchlist, name='api_watchlist'),

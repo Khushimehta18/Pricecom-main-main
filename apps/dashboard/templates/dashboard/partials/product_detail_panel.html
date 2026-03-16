@@ -51,14 +51,11 @@
                 {% endif %}
             </div>
 
-            <!-- Set Price Alert (stub button using PriceAlert model context) -->
-            <button
-                type="button"
-                class="rounded-xl border border-brand-border/70 bg-[#0b0f18] px-4 py-2 text-[11px] font-semibold tracking-widest text-brand-textMuted hover:border-brand-accent hover:text-brand-accent transition-none"
-                data-product-id="{{ product.id }}"
-                data-product-name="{{ product.name }}">
+            <a
+                href="{% url 'dashboard:alerts' %}"
+                class="rounded-xl border border-brand-border/70 bg-[#0b0f18] px-4 py-2 text-[11px] font-semibold tracking-widest text-brand-textMuted hover:border-brand-accent hover:text-brand-accent transition-none inline-flex items-center">
                 Set Price Alert
-            </button>
+            </a>
 
             <!-- View Product (default to cheapest store) -->
             {% with cheapest=stores|first %}
