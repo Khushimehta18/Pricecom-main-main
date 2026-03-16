@@ -51,11 +51,12 @@
                 {% endif %}
             </div>
 
-            <a
-                href="{% url 'dashboard:alerts' %}"
+            <button
+                type="button"
+                onclick="event.preventDefault(); event.stopPropagation(); window.priceAlertModal && window.priceAlertModal.open('{{ product.id }}');"
                 class="rounded-xl border border-brand-border/70 bg-[#0b0f18] px-4 py-2 text-[11px] font-semibold tracking-widest text-brand-textMuted hover:border-brand-accent hover:text-brand-accent transition-none inline-flex items-center">
                 Set Price Alert
-            </a>
+            </button>
 
             <!-- View Product (default to cheapest store) -->
             {% with cheapest=stores|first %}
@@ -239,9 +240,88 @@
         </div>
     </div>
 
+    <div id="price-alert-modal-{{ product.id }}" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-[1px] px-4" onclick="window.priceAlertModal && window.priceAlertModal.close('{{ product.id }}');">
+        <div class="mx-auto mt-[10vh] w-full max-w-md rounded-2xl border border-brand-border bg-[#0B0E16] p-5 shadow-[0_0_24px_rgba(0,0,0,0.45)]" onclick="event.stopPropagation();">
+            <div class="mb-4 flex items-start justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-white">Set Alert Price Range</h3>
+                    <p class="text-xs text-brand-textMuted mt-1">You will be notified when this product drops below your max alert price.</p>
+                </div>
+                <button type="button" class="text-brand-textMuted hover:text-white" onclick="window.priceAlertModal && window.priceAlertModal.close('{{ product.id }}');">✕</button>
+            </div>
+
+            <form method="post" action="{% url 'dashboard:set_price_alert_from_product' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+
+                <div>
+                    <label for="min-price-{{ product.id }}" class="block text-[11px] uppercase tracking-[0.2em] text-brand-textMuted mb-1">Min Price (Optional)</label>
+                    <input
+                        id="min-price-{{ product.id }}"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="min_price"
+                        placeholder="e.g. 50000"
+                        class="w-full rounded-xl border border-brand-border bg-[#05070c] px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-accent"
+                    >
+                </div>
+
+                <div>
+                    <label for="target-price-{{ product.id }}" class="block text-[11px] uppercase tracking-[0.2em] text-brand-textMuted mb-1">Max Alert Price</label>
+                    <input
+                        id="target-price-{{ product.id }}"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        required
+                        name="target_price"
+                        value="{{ product.current_lowest_price|default_if_none:'' }}"
+                        placeholder="e.g. 54999"
+                        class="w-full rounded-xl border border-brand-border bg-[#05070c] px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-accent"
+                    >
+                    <p class="mt-1 text-[11px] text-brand-textMuted">Current lowest: {{ current_lowest_price_display }}</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-1">
+                    <button
+                        type="button"
+                        onclick="window.priceAlertModal && window.priceAlertModal.close('{{ product.id }}');"
+                        class="rounded-xl border border-brand-border px-4 py-2 text-xs uppercase tracking-[0.2em] text-brand-textMuted hover:text-white hover:border-brand-textMuted">
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="rounded-xl bg-brand-accent px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#05070c] font-semibold hover:bg-brand-accent/90">
+                        Save Alert
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Inline script to bootstrap Chart.js using existing history payload -->
     <script>
         (function() {
+            if (!window.priceAlertModal) {
+                window.priceAlertModal = {
+                    open: function(productId) {
+                        const modal = document.getElementById('price-alert-modal-' + productId);
+                        if (modal) {
+                            modal.classList.remove('hidden');
+                            document.body.classList.add('overflow-hidden');
+                        }
+                    },
+                    close: function(productId) {
+                        const modal = document.getElementById('price-alert-modal-' + productId);
+                        if (modal) {
+                            modal.classList.add('hidden');
+                            document.body.classList.remove('overflow-hidden');
+                        }
+                    }
+                };
+            }
+
             const payload = {{ chart_json|safe }};
             const canvasId = "product-price-chart-{{ product.id }}";
 

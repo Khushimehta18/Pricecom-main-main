@@ -592,13 +592,81 @@ def watchlist_update_target(request, uuid):
 
 
 @login_required
+@require_POST
+def set_price_alert_from_product(request):
+    product_id = request.POST.get('product_id')
+    target_value = request.POST.get('target_price')
+    min_value = request.POST.get('min_price')
+
+    if not product_id:
+        messages.error(request, "Product is required to set an alert.")
+        return redirect('dashboard:alerts')
+
+    product = get_object_or_404(Product, id=product_id)
+
+    try:
+        target_price = Decimal(target_value)
+        if target_price <= 0:
+            raise InvalidOperation()
+    except (InvalidOperation, TypeError, ValueError):
+        messages.error(request, "Enter a valid alert price.")
+        return redirect('dashboard:alerts')
+
+    if min_value:
+        try:
+            min_price = Decimal(min_value)
+            if min_price <= 0 or min_price > target_price:
+                raise InvalidOperation()
+        except (InvalidOperation, TypeError, ValueError):
+            messages.error(request, "Enter a valid range where Min is less than or equal to Max.")
+            return redirect('dashboard:alerts')
+
+    current_price = product.current_lowest_price
+    watchlist_item, _ = Watchlist.objects.get_or_create(
+        user=request.user,
+        product=product,
+        defaults={
+            'added_price': current_price,
+            'last_recorded_price': current_price,
+        },
+    )
+
+    update_fields = ['target_price', 'last_notified_price']
+    watchlist_item.target_price = target_price
+    watchlist_item.last_notified_price = None
+    if watchlist_item.last_recorded_price is None and current_price is not None:
+        watchlist_item.last_recorded_price = current_price
+        update_fields.append('last_recorded_price')
+    watchlist_item.save(update_fields=update_fields)
+
+    messages.success(
+        request,
+        f"Alert set for {product.name} at ₹{target_price}. You will be notified when price goes below this value.",
+    )
+    return redirect('dashboard:alerts')
+
+
+@login_required
 def dashboard_alerts(request):
+    active_alerts = (
+        Watchlist.objects
+        .filter(user=request.user, target_price__isnull=False)
+        .select_related('product')
+        .order_by('-created_at')
+    )
     logs = (
         NotificationLog.objects
         .filter(user=request.user)
         .order_by('-intent_timestamp')[:30]
     )
-    return render(request, 'dashboard/alerts.html', {'logs': logs})
+    return render(
+        request,
+        'dashboard/alerts.html',
+        {
+            'active_alerts': active_alerts,
+            'logs': logs,
+        },
+    )
 
 
 @login_required
