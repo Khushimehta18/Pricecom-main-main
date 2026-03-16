@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict, Any
+from typing import List
 from difflib import SequenceMatcher
 
 class ProductSimilarityEngine:

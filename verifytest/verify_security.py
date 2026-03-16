@@ -2,14 +2,12 @@
 import os
 import django
 import logging
-from django.conf import settings
 
 # Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from apps.scraper.security.handshake import SanitizationHandshake, UnsafeURLError
-from apps.scraper.security.ssrf_shield import SSRFShield
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)

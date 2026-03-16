@@ -1,11 +1,14 @@
 import os
 import sys
-from pathlib import Path
-from dotenv import load_dotenv
 import socket
+import logging
+from pathlib import Path
+from datetime import timedelta
+from dotenv import load_dotenv
 
 load_dotenv()
-print("ENV TEST:", os.getenv("DB_NAME"), os.getenv("DB_USER"), os.getenv("DB_PASSWORD"))
+logger = logging.getLogger(__name__)
+logger.debug("ENV TEST: DB_NAME=%s DB_USER=%s", os.getenv("DB_NAME"), os.getenv("DB_USER"))
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
@@ -27,6 +30,7 @@ INSTALLED_APPS = [
     'core',
     'apps.dashboard',
     'apps.scraper',
+    'apps.watchlist',
     'django_cotton',
     
     # Allauth
@@ -106,12 +110,12 @@ if not USE_SQLITE and mysql_reachable:
                 'PORT': os.getenv('DB_PORT', '3306'),
             }
         }
-        print(" -> MySQL is reachable. Using MySQL.")
+        logger.info("MySQL reachable; using MySQL.")
     except Exception:
         mysql_reachable = False
 
 if USE_SQLITE or not mysql_reachable:
-    print(" -> MySQL unreachable or USE_SQLITE=True. Using SQLite.")
+    logger.info("Using SQLite: USE_SQLITE=%s mysql_reachable=%s", USE_SQLITE, mysql_reachable)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -154,6 +158,7 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Ratelimit
 RATELIMIT_ENABLE = True
@@ -168,7 +173,6 @@ REST_FRAMEWORK = {
     ),
 }
 
-from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -179,9 +183,10 @@ SIMPLE_JWT = {
 }
 
 # Login/Logout Configuration
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard_home'
-LOGOUT_REDIRECT_URL = 'login'
+# Use allauth endpoints (explicit paths)
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # --- SECURITY HARDENING ---
 SECURE_SSL_REDIRECT = os.getenv('DJANGO_SECURE_SSL_REDIRECT', 'False') == 'True'
@@ -233,13 +238,16 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# Allauth Settings
+# Allauth Settings (email-based auth)
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-SOCIALACCOUNT_AUTO_SIGNUP = True 
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+# New-style settings replacing deprecated keys
+# Use login methods set and explicit signup fields
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+# Backwards-compatible flags (kept for clarity)
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
 
 # ================= CELERY CONFIG =================
 # Force local Redis broker/result backend for Celery

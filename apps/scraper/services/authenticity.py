@@ -1,5 +1,4 @@
 import numpy as np
-import re
 from typing import Dict, Any, List
 import urllib.parse
 from django.utils import timezone
@@ -131,12 +130,10 @@ class AuthenticityManager:
                 previous_row = current_row
             return previous_row[-1]
 
-        is_whitelisted = False
         typosquatting_detected = False
         
         for w in whitelist:
             if domain == w:
-                is_whitelisted = True
                 break
             # If distance is small but not exact match -> Typosquatting
             dist = levenshtein(domain, w)

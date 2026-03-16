@@ -1,4 +1,6 @@
-import os, json, sys
+import os
+import json
+import sys
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 import django
 django.setup()

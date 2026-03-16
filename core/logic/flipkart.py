@@ -1,7 +1,6 @@
 from typing import Optional
 from decimal import Decimal
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
 import logging
 
 from core.logic.base_scraper import BaseScraper

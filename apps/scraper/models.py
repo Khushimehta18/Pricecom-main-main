@@ -1,9 +1,7 @@
 import uuid
 import datetime
-import pytz
 import re
 import hashlib
-from typing import Optional, List
 from decimal import Decimal
 from django.db import models
 from django.conf import settings
@@ -168,6 +166,8 @@ class Product(models.Model):
             # Vectors and trend mapping
             self.generate_search_vector()
             self.update_trend_mapping()
+            from apps.scraper.services.watchlist_monitor import evaluate_watchlist_targets
+            evaluate_watchlist_targets(self)
             # Atomically update DB state for speed
             self.save(update_fields=['current_lowest_price', 'trend_indicator', 'search_vector'])
 
@@ -329,6 +329,9 @@ class Watchlist(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='watchlist')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='watchlist_items')
     target_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    added_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    last_recorded_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    was_out_of_stock = models.BooleanField(default=False)
     
     # Wallet Product Synchronization (Matrix Bridging)
     reward_points_eligible = models.BooleanField(default=True)
@@ -426,10 +429,16 @@ class NotificationLog(models.Model):
 
     def log_event(self, message: str) -> None:
         MAX_LEN = 2000
-        if message and len(message) > MAX_LEN:
-            self.error_message = message[:MAX_LEN] + "... [TRUNCATED]"
-        else:
-            self.error_message = message
+        if not message:
+            return
+
+        existing = self.error_message or ''
+        joined = f"{existing} | {message}" if existing else message
+
+        if len(joined) > MAX_LEN:
+            joined = joined[:MAX_LEN] + "... [TRUNCATED]"
+
+        self.error_message = joined
         self.save(update_fields=['error_message'])
 
     @property

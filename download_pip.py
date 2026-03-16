@@ -1,6 +1,9 @@
 
 import urllib.request
 import ssl
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -14,11 +17,11 @@ else:
 url = 'https://bootstrap.pypa.io/get-pip.py'
 output = 'get-pip.py'
 
-print(f"Downloading {url}...")
+logger.info("Downloading %s...", url)
 try:
     with urllib.request.urlopen(url) as response, open(output, 'wb') as out_file:
         data = response.read()
         out_file.write(data)
-    print("Download complete.")
-except Exception as e:
-    print(f"Error: {e}")
+    logger.info("Download complete.")
+except Exception:
+    logger.exception("Error downloading %s", url)

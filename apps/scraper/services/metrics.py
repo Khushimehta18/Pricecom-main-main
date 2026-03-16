@@ -69,7 +69,6 @@ class MarketStabilityEngine:
         The sigma Engine. Calculates Standard Deviation and Mean Price.
         Implements Coefficient of Variation (CV).
         """
-        from decimal import Decimal
         import numpy as np
         
         history = list(price_history_records)
@@ -121,7 +120,7 @@ class MarketStabilityEngine:
             return ema
             
         ema_7 = calculate_ema(prices, 7)
-        ema_21 = calculate_ema(prices, 21)
+        calculate_ema(prices, 21)
         
         # Volatility Warning
         warning_triggered = ema_7 < sma_7 and high_volatility

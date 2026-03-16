@@ -1,0 +1,35 @@
+{% extends 'dashboard/dashboard_base.html' %}
+{% block title %}Watchlist Alerts{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 md:px-12 max-w-6xl mx-auto space-y-6">
+    <header class="flex flex-col gap-2">
+        <h1 class="text-3xl font-bold text-white tracking-tight">Alert History</h1>
+        <p class="text-sm text-brand-textMuted max-w-2xl">Every target hit, price drop, or restock event is recorded here for auditing and verification.</p>
+    </header>
+
+    {% if logs %}
+        <div class="space-y-3">
+            {% for log in logs %}
+                <article class="rounded-2xl border border-brand-border bg-[#0B0E16] p-5 shadow-[0_0_12px_rgba(0,0,0,0.3)]">
+                    <div class="flex items-center justify-between text-[10px] uppercase tracking-[0.4em] text-brand-textMuted">
+                        <span>{{ log.intent_timestamp|date:"M d, Y H:i" }}</span>
+                        <span class="text-brand-success">{{ log.get_alert_type_display }}</span>
+                    </div>
+                    <div class="mt-3 flex flex-col gap-1 text-sm text-white">
+                        <p class="font-semibold">Status: <span class="text-brand-accent">{{ log.status }}</span></p>
+                        <p class="text-brand-textMuted">Price: {{ log.price_at_alert|default:'N/A' }}</p>
+                        {% if log.error_message %}
+                            <p class="text-[13px] text-brand-textHighlight">{{ log.error_message }}</p>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="rounded-2xl border border-brand-border bg-[#0B0E16] p-8 text-center text-sm text-brand-textMuted">
+            No alerts have been recorded yet. Add a product to your watchlist and set a target price to trigger one.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

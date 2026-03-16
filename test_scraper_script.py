@@ -11,7 +11,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 import django
 django.setup()
 
-from core.services import ScraperService
+from core.services import ScraperService  # noqa: E402
 
 def main():
     print("Initializing Scraper Service (Browser Mode)...")

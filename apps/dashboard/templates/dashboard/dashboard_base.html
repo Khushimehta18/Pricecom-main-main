@@ -168,17 +168,17 @@
 
         <!-- Navigation -->
         <nav class="flex-1 py-4 flex flex-col font-mono text-xs uppercase tracking-wider">
-            <a href="#"
+            <a href="{% url 'dashboard:index' %}"
                 class="flex items-center space-x-3 px-4 py-2 text-brand-accent bg-[#0a1922] border-l-2 border-brand-accent">
                 <span class="w-4 text-center">]</span>
                 <span class="font-bold">Dashboard</span>
             </a>
-            <a href="#"
+            <a href="{% url 'dashboard:alerts' %}"
                 class="flex items-center space-x-3 px-4 py-2 text-brand-textMuted hover:text-brand-textHighlight hover:bg-[#0a111a] border-l-2 border-transparent transition-none">
                 <span class="w-4 text-center">></span>
                 <span>Matrix</span>
             </a>
-            <a href="#"
+            <a href="{% url 'dashboard:watchlist' %}"
                 class="flex items-center space-x-3 px-4 py-2 text-brand-textMuted hover:text-brand-textHighlight hover:bg-[#0a111a] border-l-2 border-transparent transition-none">
                 <span class="w-4 text-center">></span>
                 <span>Watchlist <span x-show="$store.pricecomStore.watchlistCount > 0"
@@ -232,11 +232,26 @@
 
                 <div class="h-4 w-px bg-brand-border hidden sm:block"></div>
 
-                <div
-                    class="flex items-center space-x-2 cursor-pointer uppercase tracking-wider text-brand-textMuted hover:text-brand-accent">
-                    <span>OP: ADMIN</span>
-                    <div class="h-1.5 w-1.5 bg-brand-accent"></div>
+                {% if user.is_authenticated %}
+                <div class="relative" x-data="{open:false}">
+                    <button @click="open = !open"
+                        class="flex items-center space-x-2 cursor-pointer uppercase tracking-wider text-brand-textMuted hover:text-brand-accent">
+                        <span class="text-[11px]">
+                            {% if user.username %}{{ user.username }}{% else %}{{ user.email }}{% endif %}
+                        </span>
+                        <div class="h-1.5 w-1.5 bg-brand-accent"></div>
+                    </button>
+
+                    <div x-show="open" x-cloak @click.away="open=false"
+                        class="absolute right-0 mt-2 w-44 bg-brand-base border border-brand-border text-xs rounded-sm overflow-hidden z-50">
+                        <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-[#0a111a]">Logout</a>
+                    </div>
                 </div>
+                {% else %}
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'login' %}" class="text-brand-textMuted hover:text-brand-accent">Login</a>
+                </div>
+                {% endif %}
             </div>
         </header>
 
@@ -259,12 +274,12 @@
             systemError: false,
             watchlistCount: 0,
             imageSearchState: {
-                taskId: null,
-                status: null,
-                results: null,
-                ocrText: null,
-                error: null
-            }
+            taskId: null,
+            status: null,
+            results: null,
+            ocrText: null,
+            error: null
+        }
             });
 
         Alpine.data('pricecomStore', () => ({
@@ -313,28 +328,28 @@
         });
 
         // Image search polling: polls /dashboard/api/result/<task_id>/ until SUCCESS/FAILURE
-        window.startImagePoll = function(taskId){
-            try{
+        window.startImagePoll = function (taskId) {
+            try {
                 const store = Alpine.store('pricecomStore');
                 store.imageSearchState = { taskId: taskId, status: 'PENDING', results: null, ocrText: store.imageSearchState.ocrText || null, error: null };
                 let attempts = 0;
                 const start = Date.now();
                 const maxTime = 120000; // 2 minutes
 
-                async function poll(){
-                    try{
+                async function poll() {
+                    try {
                         const resp = await fetch(`/dashboard/api/result/${taskId}/`, { method: 'GET', headers: { 'HX-Request': 'true' } });
-                        if(!resp.ok){ throw new Error('Network error'); }
+                        if (!resp.ok) { throw new Error('Network error'); }
                         const data = await resp.json();
                         store.imageSearchState.status = data.status || store.imageSearchState.status;
 
-                        if(data.status === 'SUCCESS'){
+                        if (data.status === 'SUCCESS') {
                             store.imageSearchState.results = data.results || [];
                             // update product table rows
                             const tbody = document.getElementById('products-tbody');
-                            if(tbody){
+                            if (tbody) {
                                 tbody.innerHTML = '';
-                                (data.results || []).forEach(function(item){
+                                (data.results || []).forEach(function (item) {
                                     const tr = document.createElement('tr');
                                     tr.className = 'hover:bg-[#0a111a] transition-none group cursor-pointer';
                                     const name = (item.name || item.store || 'Result');
@@ -362,27 +377,27 @@
                             }
 
                             // update chart if provided
-                            if(window.ApexCharts && data.chart){
-                                if(data.chart.series){ ApexCharts.exec('priceHistoryChart', 'updateSeries', data.chart.series); }
-                                if(data.chart.categories){ ApexCharts.exec('priceHistoryChart', 'updateOptions', { xaxis: { categories: data.chart.categories } }); }
+                            if (window.ApexCharts && data.chart) {
+                                if (data.chart.series) { ApexCharts.exec('priceHistoryChart', 'updateSeries', data.chart.series); }
+                                if (data.chart.categories) { ApexCharts.exec('priceHistoryChart', 'updateOptions', { xaxis: { categories: data.chart.categories } }); }
                             }
 
                             store.imageSearchState.status = 'SUCCESS';
                             return;
                         }
 
-                        if(data.status === 'FAILURE'){
+                        if (data.status === 'FAILURE') {
                             store.imageSearchState.error = data.error || 'Processing failed';
                             store.imageSearchState.status = 'FAILURE';
                             return;
                         }
 
-                    }catch(err){
+                    } catch (err) {
                         console.error('image poll error', err);
                     }
 
                     attempts++;
-                    if(Date.now() - start > maxTime){
+                    if (Date.now() - start > maxTime) {
                         store.imageSearchState.error = 'Timed out waiting for results';
                         store.imageSearchState.status = 'TIMEOUT';
                         return;
@@ -392,7 +407,7 @@
                 }
 
                 poll();
-            }catch(e){ console.error('startImagePoll error', e); }
+            } catch (e) { console.error('startImagePoll error', e); }
         }
     </script>
 </body>

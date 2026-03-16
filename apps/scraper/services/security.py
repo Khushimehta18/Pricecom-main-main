@@ -1,8 +1,6 @@
 import hashlib
 import json
-from typing import Dict, Any, List
-from decimal import Decimal
-from django.utils import timezone
+from typing import Dict, Any
 from apps.scraper.models import NotificationLog, PriceHistory
 import logging
 

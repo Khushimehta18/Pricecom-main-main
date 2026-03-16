@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout | Pricecom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'accounts/css/auth_terminal.css' %}">
+</head>
+
+<body class="auth-shell">
+    <main class="auth-main">
+        <section class="logout-grid">
+            <p class="auth-kicker">Session Control</p>
+            <div class="auth-brand">
+                <span class="brand-main">Price</span>
+                <span class="brand-accent">Com</span>
+            </div>
+            <h1 class="auth-title">End Current Session?</h1>
+            <p class="auth-subtitle">This will close your active operator session and return you to secure login.</p>
+
+            {% if messages %}
+            <ul class="message-list">
+                {% for message in messages %}
+                <li class="message-item {{ message.tags|default:'' }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="logout-actions">
+                <a class="auth-button alt" href="{% url 'dashboard:index' %}" style="text-decoration: none; text-align: center;">
+                    Cancel
+                </a>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="auth-button">Confirm logout</button>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

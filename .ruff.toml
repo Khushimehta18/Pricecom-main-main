@@ -1,0 +1,14 @@
+# Exclude development/test helper scripts and tmp files from linting
+exclude = [
+  "verifytest/**",
+  "verifytest",
+  "tests/tmp*",
+  "tests/**/tmp_*",
+  "get-pip.py",
+  "tmp_*",
+  "manual_test_registration.py",
+  "populate_uuids.py",
+  "test_pipeline.py",
+  "tests/tmp_upload_run.py",
+  ".venv/**",
+]

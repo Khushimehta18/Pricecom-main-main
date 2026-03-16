@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional
 import json
 import threading
@@ -11,15 +11,18 @@ import os
 import logging
 from django.conf import settings
 from .tasks import image_search_task
-from apps.scraper.tasks import search_and_scrape_task
 from core.services.query_cleaner import normalize_query
 from apps.scraper.services.services import ScraperService
-from django.db.models import Avg, Prefetch, Q
+from django.db.models import Avg, Prefetch
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 
 from apps.scraper.models import (
+    NotificationLog,
     PriceAlert,
     PriceHistory,
     Product,
@@ -82,46 +85,59 @@ def _stat_cards_payload() -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
         latency_delta = now - latest_sync.last_updated
         latency_seconds = latency_delta.total_seconds()
         if latency_seconds < 60:
-            stat_cards = [
-                {
-                    'title': 'Products Tracked',
-                    'value': f"{total_tracked_display:,}",
-                    'sublabel': f"{refreshed_products} refreshed 7d",
-                    'type': None,
-                },
-                {
-                    'title': 'Price Drops Today',
-                    'value': f"{downward_moves:,}",
-                    'sublabel': f"{significant_drops} deep cuts",
-                    'type': None,
-                },
-                {
-                    'title': 'Avg Market Change',
-                    'value': f"{avg_market_change:+.1f}%",
-                    'sublabel': '7d blended delta',
-                    'type': None,
-                },
-                {
-                    'title': 'Active Alerts',
-                    'value': f"{open_alerts:,}",
-                    'sublabel': f"{alerts_triggered_today} fired today",
-                    'type': None,
-                },
-                {
-                    'title': 'Data Freshness',
-                    'value': freshness_value,
-                    'sublabel': freshness_meta,
-                    'type': 'freshness',
-                },
-            ]
+            freshness_value = 'ONLINE'
+            freshness_meta = f"{int(latency_seconds)}s ago"
+        elif latency_seconds < 3600:
+            freshness_value = 'SLOW'
+            freshness_meta = f"{int(latency_seconds // 60)}m ago"
+        else:
+            freshness_value = 'STALE'
+            freshness_meta = f"{int(latency_seconds // 3600)}h ago"
 
-            meta = {
-                'avg_market_change': avg_market_change,
-                'drops_today': downward_moves,
-                'significant_drops': significant_drops,
-                'active_alerts': open_alerts,
-                'latency_seconds': latency_seconds or 0,
-            }
+    # Build stat cards and meta consistently (use total_products variable)
+    stat_cards = [
+        {
+            'title': 'Products Tracked',
+            'value': f"{total_products:,}",
+            'sublabel': f"{refreshed_products} refreshed 7d",
+            'type': None,
+        },
+        {
+            'title': 'Price Drops Today',
+            """
+            HTMX endpoint returning table rows for products.
+            """
+            'value': f"{downward_moves:,}",
+            'sublabel': f"{significant_drops} deep cuts",
+            'type': None,
+        },
+        {
+            'title': 'Avg Market Change',
+            'value': f"{avg_market_change:+.1f}%",
+            'sublabel': '7d blended delta',
+            'type': None,
+        },
+        {
+            'title': 'Active Alerts',
+            'value': f"{open_alerts:,}",
+            'sublabel': f"{alerts_triggered_today} fired today",
+            'type': None,
+        },
+        {
+            'title': 'Data Freshness',
+            'value': freshness_value,
+            'sublabel': freshness_meta,
+            'type': 'freshness',
+        },
+    ]
+
+    meta = {
+        'avg_market_change': avg_market_change,
+        'drops_today': downward_moves,
+        'significant_drops': significant_drops,
+        'active_alerts': open_alerts,
+        'latency_seconds': latency_seconds or 0,
+    }
 
     return stat_cards, meta
 
@@ -346,6 +362,7 @@ def _system_health_snapshot() -> Dict[str, Any]:
         'cpu': cpu_load,
     }
 
+@login_required
 def dashboard_home(request):
     """
     Dashboard Home View -- hydrates template context with live metrics.
@@ -363,6 +380,228 @@ def dashboard_home(request):
     }
     return render(request, 'dashboard/index.html', context)
 
+SORT_CHOICES = [
+    ('newest', 'Newest additions'),
+    ('lowest_price', 'Lowest current price'),
+    ('biggest_drop', 'Biggest price drop'),
+    ('highest_discount', 'Highest discount'),
+]
+
+AVAILABILITY_CHOICES = [
+    ('any', 'All availability'),
+    ('in_stock', 'In stock'),
+    ('out_of_stock', 'Out of stock'),
+]
+
+
+def _map_watchlist_trend(raw_indicator: Optional[str]) -> str:
+    normalized = (raw_indicator or '').upper()
+    if any(token in normalized for token in ('DOWN', 'BEAR', 'DROP')):
+        return 'Dropping'
+    if any(token in normalized for token in ('UP', 'BULL', 'RISE')):
+        return 'Rising'
+    return 'Stable'
+
+
+def _build_watchlist_payload(user) -> List[Dict[str, Any]]:
+    payload: List[Dict[str, Any]] = []
+    watchlist_qs = (
+        Watchlist.objects.filter(user=user)
+        .select_related('product')
+        .prefetch_related(
+            Prefetch('product__prices', queryset=StorePrice.objects.order_by('current_price'))
+        )
+    )
+
+    for entry in watchlist_qs:
+        product = entry.product
+        store_prices = [sp for sp in product.prices.all() if sp.current_price is not None]
+        if not store_prices:
+            continue
+
+        store_prices.sort(key=lambda sp: sp.current_price or Decimal('0'))
+        best_store = store_prices[0]
+        best_price_value = best_store.current_price or Decimal('0')
+
+        entry_price_value = (
+            entry.last_notified_price
+            or product.current_lowest_price
+            or product.base_price
+            or best_price_value
+        )
+        initial_price_value = entry.added_price or product.base_price or best_price_value
+
+        price_difference_value = Decimal('0')
+        if entry_price_value is not None and best_price_value is not None:
+            price_difference_value = entry_price_value - best_price_value
+
+        price_drop_value = price_difference_value if price_difference_value > 0 else Decimal('0')
+        price_drop_percent = 0.0
+        if price_drop_value > 0 and entry_price_value:
+            try:
+                price_drop_percent = float((price_drop_value / entry_price_value) * Decimal('100'))
+            except (InvalidOperation, ZeroDivisionError):
+                price_drop_percent = 0.0
+
+        discount_percent = float(product.discount_percentage or Decimal('0'))
+        trend_label = _map_watchlist_trend(product.trend_indicator)
+        trend_class = (
+            'text-brand-success' if trend_label == 'Dropping'
+            else 'text-brand-accent' if trend_label == 'Rising'
+            else 'text-brand-textMuted'
+        )
+
+        metadata = product.metadata if isinstance(product.metadata, dict) else {}
+        image_url = (
+            best_store.image_url
+            or metadata.get('image_url')
+            or metadata.get('thumbnail')
+        )
+
+        availability_key = 'in_stock' if best_store.is_available else 'out_of_stock'
+        availability_label = 'In Stock' if best_store.is_available else 'Out of Stock'
+        last_updated = best_store.last_updated or product.updated_at
+
+        store_breakdown = []
+        for sp in store_prices:
+            price_value = sp.current_price or Decimal('0')
+            store_breakdown.append({
+                'name': sp.store_name,
+                'price_display': _format_rupees(price_value),
+                'price_value': price_value,
+                'is_best': sp == best_store,
+            })
+
+        store_count = len(store_prices)
+        target_reached = bool(entry.target_price and best_price_value <= entry.target_price) if entry.target_price else False
+        baseline_drop_percent = 0.0
+        if initial_price_value and initial_price_value > 0 and best_price_value:
+            try:
+                baseline_drop_percent = float(((initial_price_value - best_price_value) / initial_price_value) * Decimal('100'))
+            except (InvalidOperation, ZeroDivisionError):
+                baseline_drop_percent = 0.0
+
+        payload.append({
+            'uuid': entry.uuid,
+            'product_name': product.name,
+            'product_image': image_url,
+            'store_name': best_store.store_name,
+            'product_url': best_store.product_url,
+            'availability_label': availability_label,
+            'availability_key': availability_key,
+            'trend_label': trend_label,
+            'trend_class': trend_class,
+            'current_price_display': _format_rupees(best_price_value),
+            'current_price_value': best_price_value,
+            'best_store_name': best_store.store_name,
+            'best_store_url': best_store.product_url,
+            'store_count': store_count,
+            'store_breakdown': store_breakdown,
+            'entry_price_display': _format_rupees(entry_price_value) if entry_price_value else '—',
+            'price_difference_display': _format_rupees(abs(price_difference_value)),
+            'price_difference_value': abs(price_difference_value),
+            'price_drop_percent': round(price_drop_percent, 1),
+            'discount_percent': round(discount_percent, 1),
+            'baseline_price_display': _format_rupees(initial_price_value) if initial_price_value else '—',
+            'baseline_drop_percent': round(baseline_drop_percent, 1),
+            'last_updated': last_updated,
+            'target_price_value': entry.target_price,
+            'target_price_display': _format_rupees(entry.target_price) if entry.target_price else '—',
+            'created_at': entry.created_at,
+            'price_drop_value': price_drop_value,
+            'price_direction': 'down' if price_difference_value > 0 else 'up' if price_difference_value < 0 else 'stable',
+            'target_reached': target_reached,
+            'was_out_of_stock': entry.was_out_of_stock,
+        })
+
+    return payload
+
+
+def _sort_watchlist_items(items: List[Dict[str, Any]], sort_option: str) -> str:
+    normalized_sort = sort_option if sort_option in dict(SORT_CHOICES) else 'newest'
+    reverse = True
+    key_func = lambda item: item['created_at'] or timezone.now()
+
+    if normalized_sort == 'lowest_price':
+        key_func = lambda item: item['current_price_value'] or Decimal('0')
+        reverse = False
+    elif normalized_sort == 'biggest_drop':
+        key_func = lambda item: item['price_drop_value']
+    elif normalized_sort == 'highest_discount':
+        key_func = lambda item: item['discount_percent']
+
+    items.sort(key=key_func, reverse=reverse)
+    return normalized_sort
+
+
+@login_required
+def dashboard_watchlist(request):
+    sort_option = request.GET.get('sort', 'newest')
+    availability_filter = request.GET.get('availability', 'any')
+
+    items = _build_watchlist_payload(request.user)
+    if availability_filter in ('in_stock', 'out_of_stock'):
+        items = [item for item in items if item['availability_key'] == availability_filter]
+
+    sort_option = _sort_watchlist_items(items, sort_option)
+
+    context = {
+        'items': items,
+        'sort_options': SORT_CHOICES,
+        'sort_option': sort_option,
+        'availability_filters': AVAILABILITY_CHOICES,
+        'availability_filter': availability_filter,
+    }
+    return render(request, 'dashboard/watchlist.html', context)
+
+
+@login_required
+@require_POST
+def watchlist_remove(request, uuid):
+    watchlist_item = get_object_or_404(Watchlist, uuid=uuid, user=request.user)
+    product_name = watchlist_item.product.name
+    watchlist_item.delete()
+    messages.success(request, f"{product_name} removed from your watchlist.")
+    return redirect('dashboard:watchlist')
+
+
+@login_required
+@require_POST
+def watchlist_update_target(request, uuid):
+    watchlist_item = get_object_or_404(Watchlist, uuid=uuid, user=request.user)
+    price_value = request.POST.get('target_price')
+
+    update_fields = ['target_price', 'last_notified_price']
+    if price_value:
+        try:
+            target_price = Decimal(price_value)
+            if target_price <= 0:
+                raise InvalidOperation()
+            watchlist_item.target_price = target_price
+            messages.success(request, "Target price updated.")
+        except (InvalidOperation, ValueError):
+            messages.error(request, "Enter a valid target price.")
+            return redirect('dashboard:watchlist')
+    else:
+        watchlist_item.target_price = None
+        messages.success(request, "Target price cleared.")
+
+    watchlist_item.last_notified_price = None
+    watchlist_item.save(update_fields=update_fields)
+    return redirect('dashboard:watchlist')
+
+
+@login_required
+def dashboard_alerts(request):
+    logs = (
+        NotificationLog.objects
+        .filter(user=request.user)
+        .order_by('-intent_timestamp')[:30]
+    )
+    return render(request, 'dashboard/alerts.html', {'logs': logs})
+
+
+@login_required
 def api_products(request):
     """
     HTMX endpoint returning table rows for products.
@@ -423,6 +662,7 @@ def api_products(request):
 
     return render(request, 'dashboard/partials/product_rows.html', {'products': product_list})
 
+@login_required
 def api_product_history(request, uuid):
     """
     Product-centric price intelligence endpoint.
@@ -557,6 +797,7 @@ def api_product_history(request, uuid):
     # Default behaviour: JSON payload for existing chart consumers
     return JsonResponse(chart_payload)
 
+@login_required
 def api_watchlist(request):
     """
     HTMX endpoint for watchlist panel.
@@ -565,6 +806,7 @@ def api_watchlist(request):
     items = _watchlist_items(request.user if request else None)
     return render(request, 'dashboard/partials/watchlist_items.html', {'items': items})
 
+@login_required
 def api_system_health(request):
     """
     HTMX endpoint for system health.
@@ -573,6 +815,7 @@ def api_system_health(request):
     context = _system_health_snapshot()
     return render(request, 'dashboard/partials/system_health_content.html', context)
 
+@login_required
 def api_search(request):
     """
     HTMX POST endpoint for universal search (text).
@@ -675,6 +918,7 @@ def _simulate_image_workflow(task_id: str, image_path: str) -> None:
         _IMAGE_TASKS[task_id] = {'status': 'FAILURE', 'results': [], 'chart': {}, 'error': str(exc)}
 
 
+@login_required
 def api_image_search(request):
     """Accepts an uploaded image and returns a task id for polling.
 
@@ -718,18 +962,18 @@ def api_image_search(request):
             tesseract_path = getattr(dj_settings, 'TESSERACT_CMD', None)
             if tesseract_path:
                 pytesseract.pytesseract.tesseract_cmd = tesseract_path
-                print(f"Using Tesseract binary: {pytesseract.pytesseract.tesseract_cmd}")
+                logger.info("Using Tesseract binary: %s", pytesseract.pytesseract.tesseract_cmd)
             raw_text = pytesseract.image_to_string(img)
     except ModuleNotFoundError as me:
-        print('OCR libs missing:', me)
+        logger.warning('OCR libs missing: %s', me)
         raw_text = ''
-    except Exception as e:
-        print('OCR error:', e)
+    except Exception:
+        logger.exception('OCR error')
         raw_text = ''
 
     cleaned = normalize_query(raw_text or os.path.basename(path))
-    print('OCR RAW:', raw_text)
-    print('OCR CLEAN:', cleaned.get('clean'))
+    logger.debug('OCR RAW: %s', raw_text)
+    logger.debug('OCR CLEAN: %s', cleaned.get('clean'))
 
     # Try to queue a Celery task; fallback to background thread if Celery not available
     try:
@@ -748,6 +992,7 @@ def api_image_search(request):
     return JsonResponse({'task_id': task_id, 'ocr_text': cleaned.get('clean')}, status=202)
 
 
+@login_required
 def api_result(request, task_id: str):
     """Poll endpoint for image workflow results.
 
@@ -755,7 +1000,8 @@ def api_result(request, task_id: str):
     """
     # Prefer cached task payload from Redis if available (written by Celery worker)
     try:
-        import redis, json as _json
+        import redis
+        import json as _json
         r = redis.Redis(host='127.0.0.1', port=6379, db=0, socket_timeout=5)
         # Temporary test injection when calling TEST123
         try:
@@ -766,14 +1012,14 @@ def api_result(request, task_id: str):
             pass
 
         raw = r.get(f"pricecom:task:{task_id}")
-        print("API RESULT RAW REDIS:", raw)
+        logger.debug('API RESULT RAW REDIS: %s', raw)
         if raw:
             try:
                 cached = _json.loads(raw)
                 try:
-                    print("API RESULT CACHED:", _json.dumps(cached, ensure_ascii=True))
+                    logger.debug('API RESULT CACHED: %s', _json.dumps(cached, ensure_ascii=True))
                 except Exception:
-                    print("API RESULT CACHED: <unprintable>")
+                    logger.debug('API RESULT CACHED: <unprintable>')
                 # If Redis already has results, render/return immediately
                 if isinstance(cached, dict) and cached.get('results'):
                     results = cached.get('results') or []

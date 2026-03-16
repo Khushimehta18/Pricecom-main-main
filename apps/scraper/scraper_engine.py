@@ -2,7 +2,6 @@ import re
 import logging
 from decimal import Decimal, InvalidOperation
 from abc import ABC, abstractmethod
-from django.conf import settings
 from django.utils import timezone
 # Import models using apps.get_model to avoid potential circular imports
 from django.apps import apps
@@ -11,7 +10,7 @@ from django.apps import apps
 # Local Imports
 from .stealth_browser import SeleniumStealthDriver, HumanBehavior
 from .stealth_engine import AdvancedScraperSession, ScrapeException
-from .security.handshake import SanitizationHandshake, UnsafeURLError
+from .security.handshake import SanitizationHandshake
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ class AmazonAdapter(ScraperBase):
                         price_text = element.get_attribute("textContent") if 'a-offscreen' in selector else element.text
                         if price_text:
                             break
-                except:
+                except Exception:
                     continue
             
             if not price_text:
@@ -136,7 +135,7 @@ class FlipkartAdapter(ScraperBase):
                     price_text = element.text
                     if price_text:
                         break
-                except:
+                except Exception:
                     continue
 
             if not price_text:

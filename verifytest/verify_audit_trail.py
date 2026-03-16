@@ -1,7 +1,6 @@
 import os
 import django
 import sys
-from django.conf import settings
 
 # Add project root to path
 sys.path.append(os.getcwd())

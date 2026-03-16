@@ -1,11 +1,9 @@
-import hashlib
 from typing import Optional
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db import transaction, IntegrityError
 from .models import Wallet, WalletTransaction
-from django.conf import settings
 
 class SecurityAlert(Exception):
     """Raised when fraudulent activity is detected."""

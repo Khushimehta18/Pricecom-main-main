@@ -4,7 +4,6 @@ import requests
 import logging
 import urllib.robotparser
 from urllib.parse import urlparse
-from fake_useragent import UserAgent
 
 logger = logging.getLogger(__name__)
 

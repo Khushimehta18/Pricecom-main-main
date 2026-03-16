@@ -1,6 +1,6 @@
 import re
 from decimal import Decimal
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 from dataclasses import dataclass
 
 @dataclass

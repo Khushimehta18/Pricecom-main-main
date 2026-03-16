@@ -1,7 +1,6 @@
 from typing import Optional
 from decimal import Decimal
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
 import logging
 
 from apps.scraper.logic.stealth_scraper import StealthScraper
@@ -58,7 +57,8 @@ class FlipkartScraper(StealthScraper):
             
             count = 0
             for card in cards:
-                if count >= 5: break
+                if count >= 5:
+                    break
                 
                 try:
                     # Try finding the anchor tag with href
@@ -80,11 +80,11 @@ class FlipkartScraper(StealthScraper):
                          try:
                              title_div = a.find_element(By.CSS_SELECTOR, "div._4rR01T") # List view title
                              title = title_div.text
-                         except:
+                         except Exception:
                              try:
-                                title = a.get_attribute("title")
-                             except:
-                                pass
+                                 title = a.get_attribute("title")
+                             except Exception:
+                                 pass
                          
                          if href and "/p/" in href: # Valid product link usually has /p/
                              search_results.append({
@@ -93,7 +93,8 @@ class FlipkartScraper(StealthScraper):
                                  "url": href
                              })
                              count += 1
-                             if count >= 5: break
+                             if count >= 5:
+                                 break
                 except Exception:
                     continue
                     

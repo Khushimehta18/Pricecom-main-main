@@ -3,7 +3,6 @@ import django
 import sys
 import datetime
 from django.utils import timezone
-from django.template import Context, Template
 
 # Add project root to path
 sys.path.append(os.getcwd())

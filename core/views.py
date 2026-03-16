@@ -1,8 +1,7 @@
 from django.views.generic import TemplateView
 from django.db import DatabaseError, OperationalError
-from django.http import HttpResponseServerError
 import logging
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 from core.services.manager import get_coordinated_data
 

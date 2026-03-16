@@ -3,7 +3,6 @@ import django
 import sys
 from django.test import RequestFactory
 from django.utils import timezone
-import pytz
 
 # Add project root to path
 sys.path.append(os.getcwd())

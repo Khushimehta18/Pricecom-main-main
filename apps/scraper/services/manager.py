@@ -1,11 +1,8 @@
-import threading
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from datetime import timedelta
 from django.utils import timezone
-from django.db.models import Q
-from decimal import Decimal
 
-from apps.scraper.models import Product, StorePrice
+from apps.scraper.models import Product
 from apps.scraper.concurrency import run_scraper_async
 # Note: We need to import ScraperService carefully to avoid circular imports if it imports models
 # But here we just need run_scraper_async which imports ScraperService. 

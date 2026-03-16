@@ -1,5 +1,4 @@
 
-import time
 from functools import wraps
 from django.core.cache import cache
 from django.http import HttpResponseForbidden

@@ -11,7 +11,7 @@ sys.path.append(os.getcwd())
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from apps.scraper.services.thresholds import is_meaningful_drop, calculate_drop_metrics
+from apps.scraper.services.thresholds import is_meaningful_drop
 from apps.scraper.services.reputation import ReputationEngine
 
 def run_signal_verification():

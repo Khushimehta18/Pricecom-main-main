@@ -2,7 +2,6 @@ import os
 import django
 import sys
 import uuid
-from decimal import Decimal
 from django.utils import timezone
 from django.test import RequestFactory
 
@@ -13,7 +12,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from apps.accounts.models import User
-from apps.scraper.models import Product, Category, StorePrice, PriceHistory, Watchlist, PriceAlert
+from apps.scraper.models import Product, Category, Watchlist
 from apps.scraper.scraper_engine import ScraperFactory
 from apps.dashboard.views import dashboard_home
 from apps.scraper.timezone_utils import get_utc_now

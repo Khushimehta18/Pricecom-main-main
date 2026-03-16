@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Dict, Union, Optional
+from typing import Dict, Union
 
 def is_meaningful_drop(previous_price: Decimal, current_price: Decimal) -> bool:
     """

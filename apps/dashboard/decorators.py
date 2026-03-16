@@ -1,7 +1,6 @@
 from functools import wraps
 from django.core.cache import cache
-from django.http import JsonResponse, HttpResponseForbidden
-from django.conf import settings
+from django.http import JsonResponse
 
 def rate_limit_cart(limit: int = 10, period: int = 60):
     """

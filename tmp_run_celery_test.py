@@ -1,4 +1,5 @@
-import os, sys, time
+import os
+import sys
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 import django
 try:

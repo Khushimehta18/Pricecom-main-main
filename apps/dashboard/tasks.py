@@ -64,7 +64,8 @@ def search_and_scrape(self, query: str) -> Dict[str, Any]:
             task_id = getattr(self.request, 'id', None) or getattr(self.request, 'kwargs', {}).get('task_id')
             if task_id:
                 try:
-                    import redis, json as _json
+                    import redis
+                    import json as _json
                     r = redis.Redis(host='127.0.0.1', port=6379, db=0, socket_timeout=5)
                     r.set(f"pricecom:task:{task_id}", _json.dumps(result_payload, default=str), ex=600)
                     logger.info('Cached results for task_id=%s', task_id)

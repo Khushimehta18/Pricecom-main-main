@@ -10,7 +10,7 @@ sys.path.append(os.getcwd())
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from apps.scraper.models import PriceAlert, Watchlist, Product
+from apps.scraper.models import PriceAlert, Watchlist, Product  # noqa: E402
 
 def fix_duplicates(model):
     print(f"Checking {model.__name__}...")

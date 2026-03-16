@@ -1,4 +1,6 @@
-import requests, base64, os
+import requests
+import base64
+import os
 BASE='http://127.0.0.1:8000'
 DASH=BASE+'/dashboard/'
 UPLOAD=BASE+'/dashboard/api/image-search/'

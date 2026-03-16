@@ -1,6 +1,4 @@
 import logging
-import urllib.parse
-from typing import Optional
 from .ssrf_shield import SSRFShield
 from .integrity import IntegrityGuardian
 

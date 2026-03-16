@@ -1,5 +1,4 @@
 from django.urls import path
-from django.urls import path
 from .views import ProductSearchView, TaskStatusView, WatchlistView, ToggleWatchlistView, PriceHistoryAPIView
 
 app_name = 'scraper'

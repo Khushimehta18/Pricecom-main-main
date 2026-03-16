@@ -21,8 +21,8 @@ TO 'pricecom_user'@'localhost';
 FLUSH PRIVILEGES;
 
 ---------------------------------
-celery -A config worker --loglevel=info --concurrency=4
-install redis if not already done, then run celery with: 
+
+install redis if not already done, then run celery with: celery -A config worker --loglevel=info --concurrency=4
 then python manage.py runserver 
 
 ---------------------------------

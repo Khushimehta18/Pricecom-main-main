@@ -13,7 +13,7 @@ class CustomUserAttributeSimilarityValidator(BaseUserAttributeSimilarityValidato
             super().validate(password, user)
         except ValidationError:
             raise ValidationError(
-                _("Password aapke username se milta-julta nahi ho sakta."),
+                _("i think your password and username are too similar dawg"),
                 code='password_too_similar',
             )
 
@@ -33,7 +33,7 @@ class CustomCommonPasswordValidator(BaseCommonPasswordValidator):
             super().validate(password, user)
         except ValidationError:
             raise ValidationError(
-                _("Ye password bahut common hai, kuch unique try karo!"),
+                _("No originality?"),
                 code='password_too_common',
             )
 

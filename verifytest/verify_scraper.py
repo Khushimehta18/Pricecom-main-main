@@ -9,7 +9,7 @@ sys.path.append(os.getcwd())
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from apps.scraper.scraper_engine import ScraperFactory, ScraperEngine, ScrapeException
+from apps.scraper.scraper_engine import ScraperFactory, ScraperEngine
 from apps.scraper.models import Product, Category
 
 def run_verification():

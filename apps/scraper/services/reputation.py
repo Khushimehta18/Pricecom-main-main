@@ -1,9 +1,7 @@
 import logging
-from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
 from typing import Optional
-from apps.scraper.models import PriceHistory # Assuming this tracks history
 # Note: User might not have a specific NotificationLog model yet, so I will simulate the logic
 # or assume a generic alert model. For now, I'll draft the logic to be integrable.
 

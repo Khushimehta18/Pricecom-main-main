@@ -2,13 +2,12 @@
 import os
 import django
 import logging
-from django.conf import settings
 
 # Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from apps.scraper.stealth_engine import AdvancedScraperSession, HumanBehavior, RobotsComplianceManager
+from apps.scraper.stealth_engine import AdvancedScraperSession, HumanBehavior
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)

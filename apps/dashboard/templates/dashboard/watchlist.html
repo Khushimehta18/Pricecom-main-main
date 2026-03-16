@@ -1,0 +1,140 @@
+{% extends 'dashboard/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}PriceCom - Watchlist{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 md:px-12 max-w-7xl mx-auto space-y-6">
+    <header class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-white mb-1">My Watchlist</h1>
+            <p class="text-sm font-medium tracking-wide text-brand-textMuted max-w-xl">Monitor products you care about with live pricing data, alerts, and direct actions from a secure watchlist.</p>
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div class="inline-flex items-center gap-3 px-4 py-2 border border-brand-border rounded-full text-xs uppercase tracking-[0.3em] text-brand-accent">
+                <span class="text-base font-semibold text-white">{{ items|length }}</span>
+                <span>Tracking</span>
+            </div>
+            <form method="get" class="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.2em]">
+                <label class="flex flex-col gap-1 text-brand-textMuted text-[10px]">
+                    Sort
+                    <select name="sort" class="min-w-[160px] px-3 py-2 rounded-lg bg-[#0C1119] border border-brand-border text-white" onchange="this.form.submit()">
+                        {% for key, label in sort_options %}
+                            <option value="{{ key }}" {% if key == sort_option %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="flex flex-col gap-1 text-brand-textMuted text-[10px]">
+                    Availability
+                    <select name="availability" class="min-w-[160px] px-3 py-2 rounded-lg bg-[#0C1119] border border-brand-border text-white" onchange="this.form.submit()">
+                        {% for key, label in availability_filters %}
+                            <option value="{{ key }}" {% if key == availability_filter %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button type="submit" class="px-4 py-2 rounded-lg border border-brand-border text-[10px] uppercase tracking-[0.3em] text-brand-accent hover:bg-brand-accent/10">Apply</button>
+            </form>
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="px-4 py-2 border border-brand-border rounded-2xl bg-[#0A111A] text-xs font-semibold tracking-wide text-brand-textHighlight">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if items %}
+        <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {% for item in items %}
+                <article class="flex flex-col h-full rounded-3xl border border-brand-border bg-gradient-to-b from-[#0C0F17] to-[#05070D] shadow-[0_0_15px_rgba(0,0,0,0.3)]">
+                    <div class="p-5 space-y-4">
+                        <div class="flex items-center justify-between text-[11px] uppercase tracking-wider text-brand-textMuted">
+                            <span class="px-3 py-2 border border-brand-border rounded-full shadow-sm bg-black/30">{{ item.best_store_name }}</span>
+                            <span class="px-3 py-2 rounded-full border border-brand-border text-[10px] font-semibold text-white">{{ item.store_count }} stores</span>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-28 h-28 bg-[#111624] rounded-2xl overflow-hidden border border-brand-border flex items-center justify-center">
+                                {% static 'images/placeholder.png' as placeholder_image %}
+                                <img src="{{ item.product_image|default:placeholder_image }}"
+                                     alt="{{ item.product_name }}" class="max-w-full max-h-full object-contain" loading="lazy">
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <h3 class="text-xl font-bold text-white leading-tight">{{ item.product_name }}</h3>
+                                <p class="text-[11px] text-brand-textMuted">Last updated: {{ item.last_updated|date:"M d, Y H:i" }}</p>
+                                <div class="flex flex-wrap items-baseline gap-3">
+                                    <span class="text-3xl font-bold tracking-tight text-white">{{ item.current_price_display }}</span>
+                                    <span class="text-xs text-brand-textMuted uppercase tracking-[0.4em]">Entry {{ item.entry_price_display }}</span>
+                                </div>
+                                <div class="flex flex-wrap gap-3 text-[10px] uppercase tracking-[0.3em] text-white">
+                                    <span class="{{ item.trend_class }}">Trend: {{ item.trend_label }}</span>
+                                    <span class="text-brand-success">Δ {{ item.price_difference_display }}</span>
+                                    <span class="text-brand-accent">{{ item.price_drop_percent }}% drop</span>
+                                    <span class="text-brand-textMuted">{{ item.discount_percent }}% off base</span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.3em] text-white">
+                                    <span>Initial {{ item.baseline_price_display }}</span>
+                                    <span>{{ item.baseline_drop_percent }}% vs start</span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 text-[10px] tracking-[0.4em]">
+                                    {% if item.target_reached %}
+                                        <span class="px-3 py-1 text-xs font-semibold border border-brand-success rounded-full bg-brand-success/10 text-brand-success">Target reached</span>
+                                    {% endif %}
+                                    {% if item.was_out_of_stock %}
+                                        <span class="px-3 py-1 text-xs font-semibold border border-red-500 rounded-full bg-red-500/10 text-red-400">Currently out of stock</span>
+                                    {% else %}
+                                        <span class="px-3 py-1 text-xs font-semibold border border-brand-success rounded-full bg-brand-success/10 text-brand-success">In stock</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-[10px] uppercase tracking-[0.4em] text-brand-textMuted">
+                                    Best: {{ item.best_store_name }} — {{ item.current_price_display }}
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-1 text-[10px] text-brand-textMuted">
+                                    {% for store in item.store_breakdown %}
+                                    <span class="px-2 py-1 rounded-full border border-brand-border bg-white/5">
+                                        {{ store.name }} {{ store.price_display }}{% if store.is_best %} — Best{% endif %}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-brand-border px-5 py-4 bg-[#05070D]/70 flex flex-col gap-3">
+                        <a href="{{ item.best_store_url }}" target="_blank" rel="noreferrer" class="w-full text-center px-4 py-3 border border-brand-border rounded-2xl text-xs uppercase tracking-[0.4em] text-brand-accent hover:bg-brand-accent/20 transition">Buy Now</a>
+                        {% if item.target_reached %}
+                            <p class="text-[10px] uppercase tracking-[0.4em] text-brand-success text-center">Target price met – alert triggered</p>
+                        {% endif %}
+                        <form method="post" action="{% url 'dashboard:watchlist_update_target' item.uuid %}" class="flex flex-col gap-2">
+                            {% csrf_token %}
+                            <div class="flex items-center gap-2">
+                                <label class="text-[10px] uppercase tracking-[0.4em] text-brand-textMuted">Target price</label>
+                                <input type="number" name="target_price" min="0" step="0.01" placeholder="Enter price"
+                                    value="{{ item.target_price_value|default_if_none:'' }}"
+                                    class="flex-1 px-3 py-2 bg-[#0C1119] border border-brand-border rounded-lg text-sm text-white focus:outline-none focus:border-brand-accent">
+                            </div>
+                            <button type="submit" class="w-full px-4 py-2 rounded-2xl bg-brand-accent text-[#080B0F] font-semibold uppercase tracking-[0.3em]">Save target</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:watchlist_remove' item.uuid %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full px-4 py-2 rounded-2xl border border-red-500 text-red-400 uppercase tracking-[0.3em] text-xs hover:bg-red-500/10">Remove from watchlist</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-20 bg-[#0D1117]/60 rounded-3xl border border-brand-border backdrop-blur-sm space-y-4">
+            <div class="w-24 h-24 mx-auto mb-2 bg-brand-border/30 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-brand-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-semibold text-white">No products in your watchlist yet</h3>
+            <p class="text-sm text-brand-textMuted">Browse the dashboard to scrape and add the products you want to track.</p>
+            <a href="/" class="inline-flex items-center justify-center px-6 py-3 rounded-full bg-brand-accent text-[#080B0F] font-semibold uppercase tracking-[0.4em] text-xs">Browse Products</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

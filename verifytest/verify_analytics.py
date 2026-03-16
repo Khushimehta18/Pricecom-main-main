@@ -12,7 +12,6 @@ django.setup()
 from django.test import RequestFactory
 from django.contrib.auth import get_user_model
 from apps.scraper.models import Product, PriceHistory, StorePrice, Watchlist, Category
-from apps.dashboard.views import dashboard_home
 
 User = get_user_model()
 
@@ -53,7 +52,7 @@ def run_verification():
     # Instead, we will replicate the view's core logic here to verify valid execution, 
     # relying on the FACT that the code is identical.
     
-    from django.db.models import Sum, F, Count, Prefetch, Q
+    from django.db.models import Sum, F, Prefetch, Q
     from django.db.models.functions import Coalesce
     
     print("\n[Executing Logic...]")

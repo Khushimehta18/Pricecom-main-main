@@ -2,8 +2,6 @@
 import hmac
 import hashlib
 import json
-from django.conf import settings
-from decimal import Decimal
 
 def generate_signature(secret_key, data_dict):
     """

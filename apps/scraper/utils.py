@@ -1,5 +1,4 @@
-import re
-from typing import List, Dict
+from typing import List
 from difflib import SequenceMatcher
 
 def calculate_product_similarity(title1: str, title2: str) -> float:

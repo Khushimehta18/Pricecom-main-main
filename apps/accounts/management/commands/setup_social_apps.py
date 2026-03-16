@@ -13,7 +13,7 @@ class Command(BaseCommand):
         # 1. Setup Site
         site_id = getattr(settings, 'SITE_ID', 1)
         domain = '127.0.0.1:8000'
-        name = 'Antigravity Dev'
+        name = 'Khushi does code'
 
         # Ensure Site ID exists or update it
         if Site.objects.filter(id=site_id).exists():

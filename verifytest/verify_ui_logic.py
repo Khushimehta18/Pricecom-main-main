@@ -1,8 +1,6 @@
 import os
 import django
 import sys
-from django.template import Context, Template
-from django.test import RequestFactory
 import datetime
 from django.utils import timezone
 

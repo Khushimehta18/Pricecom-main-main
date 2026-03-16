@@ -1,22 +1,21 @@
-import logging
-import time
-from decimal import Decimal
-from celery import shared_task, group
-from django.contrib.auth import get_user_model
-from django.conf import settings
 import json
-from urllib.parse import urlparse
+import logging
 import os
+from decimal import Decimal
 from typing import Optional
+
+from celery import shared_task, group
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from django.core.cache import cache
+
+from apps.scraper.models import PriceAlert, Product
 from apps.scraper.services.services import ScraperService
-from apps.scraper.models import Product, PriceAlert
 from apps.scraper.services.smtp_handler import send_monitored_email
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
-
-
-@shared_task
 def search_and_scrape(query: str):
     """Lightweight Celery task to scrape and persist products for a query."""
     logger.info('TASK START simple search %r', query)
@@ -111,8 +110,6 @@ def send_price_alert_email(self, user_id: int, subject: str, message: str, produ
     "Smart Watcher" Notification Worker.
     Decouples SMTP and enforces Frequency Capping (Cool-down).
     """
-    from django.core.cache import cache
-    
     # 1. Frequency Capping (The "Cool-down" Logic)
     # Prevent spamming the same user about the same product within 24 hours.
     # Cache Key: alert_cool_down_{user_id}_{product_id}
@@ -252,8 +249,6 @@ def search_and_scrape_task(self, query: str, user_id: int = None):
             logger.warning('Could not read SERPAPI_API_KEY from settings')
 
         service = ScraperService()
-        # read frontend_task_id if provided in kwargs (used for caching)
-        frontend_task_id = getattr(self.request, 'kwargs', {}).get('frontend_task_id') if hasattr(self, 'request') else None
 
         # Fallback: if cleaned query empty, try raw_query from kwargs
         raw_query = None
@@ -462,8 +457,6 @@ def process_product_image_ocr(self, image_id: int):
     """
     from PIL import Image, ImageOps 
     import pytesseract
-    from io import BytesIO
-    from django.core.files.base import ContentFile
     from apps.scraper.models import ProductImage
     import re
     
@@ -584,7 +577,7 @@ def run_authenticity_check(self, store_price_id: int):
     Post-Scrape Authenticity Shield Subtask.
     Executes Z-Score & NLP checks and atomically updates DB.
     """
-    from apps.scraper.models import StorePrice, PriceHistory
+    from apps.scraper.models import StorePrice
     from apps.scraper.services.authenticity import AuthenticityManager
     
     try:

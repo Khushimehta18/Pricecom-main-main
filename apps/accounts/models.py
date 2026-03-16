@@ -1,8 +1,12 @@
+import uuid
+import hashlib
+from decimal import Decimal
+
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
 from django.apps import apps
+
 
 class User(AbstractUser):
     # Alert Frequency Choices
@@ -31,13 +35,15 @@ class User(AbstractUser):
     profile_updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []   # CHANGED
 
     def __str__(self):
         return f"{self.email} ({self.get_alert_frequency_display()})"
 
     def save(self, *args, **kwargs):
-        # Update timestamp on save (handled by auto_now, but explicit logic can go here if needed)
+        # AUTO-GENERATE USERNAME IF EMPTY (FIX FOR DUPLICATE USERNAME ERROR)
+        if not self.username:
+            self.username = f"user_{uuid.uuid4().hex[:8]}"
         super().save(*args, **kwargs)
 
     def get_pending_alerts(self):
@@ -48,20 +54,10 @@ class User(AbstractUser):
         """
         PriceAlert = apps.get_model('scraper', 'PriceAlert')
         
-        # Base query: Alerts for this user that haven't been triggered/sent
-        # Assuming 'is_triggered' means sent/processed. 
-        # If 'is_triggered' is just for the price drop event, we might need a separate 'sent_at' 
-        # or 'is_sent' field. For now, we filter by what's available.
-        # If frequency is INSTANT, we want all untriggered/unprocessed alerts.
-        # If DAILY/WEEKLY, we might fetch alerts created in the last X duration.
-        
         pending = PriceAlert.objects.filter(user=self, is_triggered=False)
         
         return pending
 
-import uuid
-import hashlib
-from decimal import Decimal
 
 class Wallet(models.Model):
     STATUS_CHOICES = [
@@ -76,6 +72,7 @@ class Wallet(models.Model):
 
     def __str__(self):
         return f"Wallet ({self.user.email}) - {self.balance}"
+
 
 class WalletTransaction(models.Model):
     TX_TYPE_CHOICES = [

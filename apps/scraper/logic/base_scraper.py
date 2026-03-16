@@ -5,12 +5,12 @@ import os
 import re
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from apps.scraper.utils.driver_factory import WebDriverFactory
 
 logger = logging.getLogger(__name__)

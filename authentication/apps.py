@@ -11,4 +11,3 @@ class AccountsConfig(AppConfig):
         Task 1: App Config
         Register signals when app is ready.
         """
-        import authentication.signals

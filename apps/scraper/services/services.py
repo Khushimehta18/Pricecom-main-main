@@ -3,9 +3,8 @@ import os
 import random
 import time
 import re
-from typing import Dict, Optional, Any, List
 from decimal import Decimal
-from datetime import datetime
+from typing import Dict, Optional, Any, List
 from urllib.parse import quote_plus
 
 import requests
@@ -15,9 +14,9 @@ from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
 
-SERPAPI_ENDPOINT = "https://serpapi.com/search.json"
-
 from apps.scraper.models import Product, StorePrice, PriceHistory
+
+SERPAPI_ENDPOINT = "https://serpapi.com/search.json"
 
 logger = logging.getLogger(__name__)
 
@@ -146,8 +145,6 @@ class ScraperService:
         if not text:
             return None
         cleaned = re.sub(r"[^0-9.]", "", text)
-        if not cleaned:
-            return None
         try:
             return Decimal(cleaned)
         except Exception:
@@ -275,9 +272,6 @@ class ScraperService:
                 )
 
                 # price history with simple delta
-                last_price = None
-                if not created:
-                    last_price = sp.current_price
                 PriceHistory.objects.create(
                     store_price=sp,
                     price=price_val,
@@ -303,7 +297,8 @@ class ScraperService:
                 magnitude_label = f"{magnitude:.0f}"
                 delta_label = f"{prefix}_{magnitude_label}"
 
-        fmt = lambda v: f"₹{int(Decimal(v)):,}" if v is not None else 'N/A'
+        def fmt(value):
+            return f"₹{int(Decimal(value)):,}" if value is not None else 'N/A'
         row = {
             'id': product.id,
             'name': product.name.upper()[:24],

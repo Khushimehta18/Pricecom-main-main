@@ -1,7 +1,6 @@
 import os
 import django
 import sys
-import time
 
 # Add project root to path
 sys.path.append(os.getcwd())

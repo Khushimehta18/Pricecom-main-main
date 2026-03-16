@@ -5,7 +5,5 @@ class ScraperConfig(AppConfig):
     name = 'apps.scraper'
 
     def ready(self):
-        import apps.scraper.signals
-
-    def ready(self):
-        import apps.scraper.signals
+        # Hooks or signal registration would go here.
+        pass

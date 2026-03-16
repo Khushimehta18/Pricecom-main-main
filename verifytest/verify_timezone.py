@@ -10,7 +10,7 @@ sys.path.append(os.getcwd())
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from apps.scraper.timezone_utils import get_utc_now, is_price_stale, sync_api_timestamp
+from apps.scraper.timezone_utils import get_utc_now, is_price_stale
 from apps.scraper.models import Product, Category
 
 def run_verification():

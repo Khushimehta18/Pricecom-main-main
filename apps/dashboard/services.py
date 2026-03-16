@@ -1,8 +1,10 @@
+import logging
 from typing import Any, Dict, List, Optional
+
+from django.db import transaction
+
 from apps.scraper.models import Product, StorePrice
 from .utils_fuzzy_search import best_matches
-from django.db import transaction
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +46,6 @@ def save_storeprice(product_id: int, store_name: str, price: float, url: Optiona
             sp.save()
     logger.info('Saved StorePrice product=%s store=%s price=%s', product_id, store_name, price)
     return sp
-from typing import List, Dict, Any
 
 class MatrixConstructor:
     """

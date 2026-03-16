@@ -1,6 +1,11 @@
+import re
+import bleach
+from typing import List, Dict, Any
+from datetime import datetime, timezone
+
 from django.db import transaction
-from .models import UniversalCart as Cart, CartItem
-from apps.scraper.models import Product, PriceHistory
+
+from .models import UniversalCart as Cart
 
 def get_or_create_cart(request):
     """
@@ -70,9 +75,6 @@ def update_cart_to_best_price(cart):
             # item.affiliate_url = best_price_entry.product_url # In real world, wrap this
             item.save()
 
-import re
-import bleach
-
 def normalize_product_url(url: str) -> str:
     """
     Sanitization Handshake: Strips UTM params, session IDs and tracking tags.
@@ -102,9 +104,6 @@ def sanitize_xss(text: str) -> str:
     if not text:
          return text
     return bleach.clean(text, tags=[], strip=True)
-
-from typing import List, Dict, Any
-from datetime import datetime, timezone
 
 def calculate_freshness_badge(timestamp_str: str) -> Dict[str, Any]:
     """

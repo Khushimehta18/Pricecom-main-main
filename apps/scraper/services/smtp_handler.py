@@ -7,7 +7,7 @@ from apps.scraper.models import NotificationLog, Product
 
 logger = logging.getLogger('apps.scraper')
 
-def send_monitored_email(user, subject: str, message: str, product: Product = None, current_price=None, alert_type='Drop'):
+def send_monitored_email(user, subject: str, message: str, product: Product = None, current_price=None, alert_type='Drop') -> NotificationLog:
     """
     The 'Intent-Result' Handshake Logic.
     Tracks every email intent and its final server response based on Non-Repudiation.
@@ -18,7 +18,7 @@ def send_monitored_email(user, subject: str, message: str, product: Product = No
     # transaction.atomic ensures data integrity.
     
     log_entry = None
-    
+
     try:
         with transaction.atomic():
             log_entry = NotificationLog.objects.create(
@@ -28,6 +28,9 @@ def send_monitored_email(user, subject: str, message: str, product: Product = No
                 status='PENDING',
                 alert_type=alert_type
             )
+
+        if log_entry and message:
+            log_entry.log_event(message)
 
         # Step 2 (The Try-Except Block): Execute Command
         try:
@@ -44,14 +47,14 @@ def send_monitored_email(user, subject: str, message: str, product: Product = No
                 # Step 3 (Result): Success
                 log_entry.status = 'SENT'
                 log_entry.smtp_response_code = "250 OK" # Standard Success
-                log_entry.save()
-                return True
+                log_entry.save(update_fields=['status', 'smtp_response_code'])
             else:
                 # Weird case where no exception but 0 sent
                 log_entry.status = 'FAILED'
                 log_entry.error_message = "SMTP returned 0 sent count."
-                log_entry.save()
-                return False
+                log_entry.save(update_fields=['status', 'error_message'])
+
+            return log_entry
 
         except Exception as e:
             # The Fail-Safe
@@ -60,9 +63,9 @@ def send_monitored_email(user, subject: str, message: str, product: Product = No
             log_entry.save(update_fields=['status']) # Force Save Status First
             log_entry.log_event(error_trace) # Truncates if needed
             logger.error(f"SMTP FAILED: {e}")
-            return False
+            return log_entry
             
     except Exception as e:
         # DB Error creating log?
         logger.critical(f"CRITICAL: Failed to create Audit Log! {e}")
-        return False
+        return log_entry

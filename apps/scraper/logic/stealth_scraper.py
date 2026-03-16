@@ -2,7 +2,7 @@
 import logging
 import time
 import random
-from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver.common.by import By
 from apps.scraper.logic.base_scraper import BaseScraper
 

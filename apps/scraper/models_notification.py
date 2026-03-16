@@ -1,23 +1,31 @@
 
+import uuid
+
+from django.conf import settings
+from django.db import models
+
+from apps.scraper.models import Product
+
+
 class NotificationLog(models.Model):
     """
     High-Trust Audit Trail System.
     Tracks every email intent and its final server response based on Non-Repudiation.
     """
+
     STATUS_CHOICES = [
         ('PENDING', 'PENDING'),
         ('SENT', 'SENT'),
         ('FAILED', 'FAILED'),
         ('SUPPRESSED', 'SUPPRESSED'),
     ]
-    
+
     ALERT_TYPE_CHOICES = [
         ('Drop', 'Price Drop'),
         ('Restock', 'Back in Stock'),
         ('System', 'System Alert'),
     ]
-    
-    import uuid
+
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, help_text="Traceability ID")
     
     # Relational Integrity
