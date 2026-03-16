@@ -16,6 +16,5 @@ db.sqlite3
 .DS_Store
 Thumbs.db
 
-**/venv/
+venv/
 explanation.md
-.venv/
